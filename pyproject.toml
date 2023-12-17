@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "cirulnik-admin-bot"
+version = "0.1.0"
+description = ""
+authors = ["DipodDP <dipoddp@gmail.com>"]
+readme = "README.md"
+packages = [{include = "tgbot"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiogram = ">=3.0,<4.0"
+environs = ">=9.0,<10.0"
+# redis = "^5.0.1"
+betterlogging = "^0.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

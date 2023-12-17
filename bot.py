@@ -4,16 +4,13 @@ import logging
 import betterlogging as bl
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
+from tgbot.misc.notify_admins import on_down, on_startup
+from tgbot.misc.setting_comands import set_all_default_commands
+# from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
 from tgbot.config import load_config, Config
 from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware
-from tgbot.services import broadcaster
-
-
-async def on_startup(bot: Bot, admin_ids: list[int]):
-    await broadcaster.broadcast(bot, admin_ids, "Бот був запущений")
 
 
 def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=None):
@@ -75,10 +72,11 @@ def get_storage(config):
 
     """
     if config.tg_bot.use_redis:
-        return RedisStorage.from_url(
-            config.redis.dsn(),
-            key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True),
-        )
+        # return RedisStorage.from_url(
+        #     config.redis.dsn(),
+        #     key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True),
+        # )
+        ...
     else:
         return MemoryStorage()
 
@@ -95,13 +93,26 @@ async def main():
     dp.include_routers(*routers_list)
 
     register_global_middlewares(dp, config)
+    await set_all_default_commands(bot)
 
-    await on_startup(bot, config.tg_bot.admin_ids)
-    await dp.start_polling(bot)
+    try:
+        await on_startup(bot, config.tg_bot.admin_ids)
+        await dp.start_polling(bot)
+
+    except Exception as e:
+        logging.exception(e)
+        # await dp.stop_polling()
+        ...
+    finally:
+        await on_down(bot, config.tg_bot.admin_ids)
+        await bot.session.close()
+        await dp.emit_shutdown()
+        await dp.storage.close()
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
+        # asyncio.gather(main(), return_exceptions=True).cancel()
     except (KeyboardInterrupt, SystemExit):
-        logging.error("Бот був вимкнений!")
+        logging.error("Bot is stopped!")
