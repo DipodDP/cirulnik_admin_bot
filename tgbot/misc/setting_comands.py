@@ -6,12 +6,12 @@ DEF_COMMANDS = {
     'ru': [
         BotCommand(command='/start', description='Запустить бота'),
         BotCommand(command='/help', description='Помощь по боту'),
-        BotCommand(command='/menu', description='Меню')
+        # BotCommand(command='/menu', description='Меню')
     ],
     'en': [
         BotCommand(command='/start', description='Bot start'),
         BotCommand(command='/help', description='Bot help'),
-        BotCommand(command='/menu', description='Menu')
+        # BotCommand(command='/menu', description='Menu')
     ]
 }
 

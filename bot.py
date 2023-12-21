@@ -49,7 +49,7 @@ def setup_logging():
     Example usage:
         setup_logging()
     """
-    log_level = logging.INFO
+    log_level = logging.DEBUG
     bl.basic_colorized_config(level=log_level)
 
     logging.basicConfig(
