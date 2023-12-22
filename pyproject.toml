@@ -7,11 +7,12 @@ readme = "README.md"
 packages = [{include = "tgbot"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 aiogram = ">=3.0,<4.0"
 environs = ">=9.0,<10.0"
 # redis = "^5.0.1"
 betterlogging = "^0.2.1"
+aiohttp-socks = "^0.8.4"
 
 [build-system]
 requires = ["poetry-core"]
