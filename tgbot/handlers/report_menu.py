@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, location
 from aiogram.utils.formatting import as_section, as_key_value, as_marked_list
 from betterlogging import logging
 
@@ -92,11 +92,12 @@ async def choose_location(
                     as_key_value("Адрес", location_info["address"]),
                 ),
             )
+            logger.debug(f'Choosen location: {text.as_kwargs()}')
 
             location_message = await query.message.edit_text(text.as_html(), parse_mode=ParseMode.HTML)
             answer = await query.message.answer(ReportHandlerMessages.MASTERS_QUANTITY,reply_markup=nav_keyboard())
 
-            await state.update_data(location=query.data)
+            await state.update_data(location=text)
             await state.set_state(ReportMenuStates.entering_masters_quantity)
 
             # You can also use MarkdownV2:

@@ -1,10 +1,11 @@
 from aiogram import types, Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.context import FSMContext
 from betterlogging import logging
+from tgbot.config import Config
 
 from tgbot.keyboards.reply import NavButtons, nav_keyboard, send_keyboard, user_menu_keyboard
 from tgbot.messages.handlers_msg import ReportHandlerMessages
+from tgbot.misc.notify_owners import ReportBuilder, on_report
 from tgbot.misc.states import ReportMenuStates
 from tgbot.services.utils import delete_prev_message
 
@@ -44,9 +45,12 @@ async def enter_abscent(message: types.Message, state: FSMContext):
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
 
 @report_morning_router.message(F.text == NavButtons.BTN_SEND, ReportMenuStates.completing_report)
-async def complete_report(message: types.Message, state: FSMContext):
+async def complete_report(message: types.Message, state: FSMContext, config: Config):
     await message.delete()
     await delete_prev_message(state)
+    data = await state.get_data() 
+    # await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(data).report)
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
     await state.clear()
     await message.answer(ReportHandlerMessages.REPORT_COMPLETED,reply_markup=user_menu_keyboard())
+    await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(data).report)

@@ -97,6 +97,7 @@ async def main():
 
     try:
         await on_startup(bot, config.tg_bot.admin_ids)
+        await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
 
     except Exception as e:

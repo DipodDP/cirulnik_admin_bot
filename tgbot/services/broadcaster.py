@@ -4,6 +4,7 @@ from typing import Union
 
 from aiogram import Bot
 from aiogram import exceptions
+from aiogram.enums import ParseMode
 from aiogram.types import InlineKeyboardMarkup
 
 
@@ -12,7 +13,8 @@ async def send_message(
     user_id: Union[int, str],
     text: str,
     disable_notification: bool = False,
-    reply_markup: InlineKeyboardMarkup = None,
+    reply_markup: InlineKeyboardMarkup | None = None,
+    parse_mode: ParseMode | None = None
 ) -> bool:
     """
     Safe messages sender
@@ -30,6 +32,7 @@ async def send_message(
             text,
             disable_notification=disable_notification,
             reply_markup=reply_markup,
+            parse_mode=parse_mode
         )
     except exceptions.TelegramBadRequest as e:
         logging.error("Telegram server says - Bad Request: chat not found")
@@ -41,7 +44,7 @@ async def send_message(
         )
         await asyncio.sleep(e.retry_after)
         return await send_message(
-            bot, user_id, text, disable_notification, reply_markup
+            bot, user_id, text, disable_notification, reply_markup, parse_mode
         )  # Recursive call
     except exceptions.TelegramAPIError:
         logging.exception(f"Target [ID:{user_id}]: failed")
@@ -56,7 +59,8 @@ async def broadcast(
     users: list[Union[str, int]],
     text: str,
     disable_notification: bool = False,
-    reply_markup: InlineKeyboardMarkup = None,
+    reply_markup: InlineKeyboardMarkup | None = None,
+    parse_mode: ParseMode | None = None
 ) -> int:
     """
     Simple broadcaster.
@@ -71,7 +75,7 @@ async def broadcast(
     try:
         for user_id in users:
             if await send_message(
-                bot, user_id, text, disable_notification, reply_markup
+                bot, user_id, text, disable_notification, reply_markup, parse_mode
             ):
                 count += 1
             await asyncio.sleep(
