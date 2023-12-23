@@ -1,8 +1,8 @@
 import asyncio
 import logging
-
+from aiogram.client.session.aiohttp import AiohttpSession
 import betterlogging as bl
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, session
 from aiogram.fsm.storage.memory import MemoryStorage
 from tgbot.misc.notify_admins import on_down, on_startup
 from tgbot.misc.setting_comands import set_all_default_commands
@@ -84,10 +84,17 @@ def get_storage(config):
 async def main():
     setup_logging()
 
+    logger = logging.getLogger(__name__)
+
     config = load_config(".env")
+    logger.debug(config)
+
     storage = get_storage(config)
 
-    bot = Bot(token=config.tg_bot.token, parse_mode="HTML")
+    # Proxy URL with credentials:
+    # "protocol://user:password@host:port"
+    session = AiohttpSession(config.tg_bot.proxy_url) if config.tg_bot.proxy_url else None
+    bot = Bot(token=config.tg_bot.token, parse_mode="HTML", session=session)
     dp = Dispatcher(storage=storage)
 
     dp.include_routers(*routers_list)

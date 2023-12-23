@@ -75,6 +75,7 @@ class TgBot:
 
     token: str
     admin_ids: list[int | str]
+    proxy_url: str
     use_redis: bool
 
     @staticmethod
@@ -84,12 +85,13 @@ class TgBot:
         """
         token = env.str("BOT_TOKEN")
         admin_ids = list(map(int, env.list("ADMINS")))
+        proxy_url = env.str("PROXY_URL")
         # admin_ids = list(map(
         #     lambda item: int(item) if isinstance(item, int) else str(item),
         #     env.list("ADMINS")
         # ))
         use_redis = env.bool("USE_REDIS")
-        return TgBot(token=token, admin_ids=admin_ids, use_redis=use_redis)
+        return TgBot(token=token, admin_ids=admin_ids, proxy_url=proxy_url, use_redis=use_redis)
 
 
 @dataclass
