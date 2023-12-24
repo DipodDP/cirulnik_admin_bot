@@ -1,15 +1,18 @@
-from aiogram import Router, F
+from aiogram import Router, F, types
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery, location
+from aiogram.types import Message, CallbackQuery
 from aiogram.utils.formatting import as_section, as_key_value, as_marked_list
 from betterlogging import logging
+from tgbot.config import Config
 
 from tgbot.keyboards.inline import daytime_keyboard, locations_keyboard, \
     LocationCallbackData
-from tgbot.keyboards.reply import ReplyButtons, nav_keyboard
+from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_menu_keyboard
 from tgbot.messages.handlers_msg import ReportHandlerMessages
+from tgbot.misc.report_to_owners import ReportBuilder, on_report
 from tgbot.misc.states import ReportMenuStates
+from tgbot.services.broadcaster import broadcast_message
 from tgbot.services.utils import delete_prev_message
 
 
@@ -95,10 +98,19 @@ async def choose_location(
             logger.debug(f'Choosen location: {text.as_kwargs()}')
 
             location_message = await query.message.edit_text(text.as_html(), parse_mode=ParseMode.HTML)
-            answer = await query.message.answer(ReportHandlerMessages.MASTERS_QUANTITY,reply_markup=nav_keyboard())
-
             await state.update_data(location=text)
-            await state.set_state(ReportMenuStates.entering_masters_quantity)
+
+            state_data = await state.get_data()
+
+            if state_data['daytime'] == 'morning':
+                answer_text = ReportHandlerMessages.MASTERS_QUANTITY
+                next_state = ReportMenuStates.entering_masters_quantity
+            else:
+                answer_text = ReportHandlerMessages.CLIENTS_LOST
+                next_state = ReportMenuStates.entering_clients_lost
+
+            answer = await query.message.answer(answer_text,reply_markup=nav_keyboard())
+            await state.set_state(next_state)
 
             # You can also use MarkdownV2:
             # await query.message.edit_text(text.as_markdown(), parse_mode=ParseMode.MARKDOWN_V2)
@@ -106,6 +118,22 @@ async def choose_location(
             answer = await query.message.edit_text("Location not found!")
             location_message = None
 
-        await state.update_data(prev_bot_message=answer, location_message=location_message)
+        await state.update_data(prev_bot_message=answer, location_message=location_message,)
 
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+
+@report_menu_router.message(F.text == NavButtons.BTN_SEND, ReportMenuStates.completing_report)
+async def complete_report(message: types.Message, state: FSMContext, config: Config):
+    await message.delete()
+    await delete_prev_message(state)
+    data = await state.get_data() 
+    logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+    await state.clear()
+    await message.answer(ReportHandlerMessages.REPORT_COMPLETED,reply_markup=user_menu_keyboard())
+    if data['daytime'] == 'morning':
+        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(data).construct_morning_report())
+        await broadcast_message(config.tg_bot.admin_ids, data['open_check'])
+    elif data['daytime'] == 'evening':
+        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(data).construct_evening_report())
+        await broadcast_message(config.tg_bot.admin_ids, data['daily_excel'])
+        await broadcast_message(config.tg_bot.admin_ids, data['z_report'])

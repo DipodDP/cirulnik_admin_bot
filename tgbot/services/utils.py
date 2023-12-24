@@ -15,4 +15,4 @@ async def delete_prev_message(state: FSMContext):
             logger.debug(prev_bot_message.message_id)
             await prev_bot_message.delete()
         except TelegramBadRequest as e:
-            logger.exception(e)
+            logger.exception(e.message)
