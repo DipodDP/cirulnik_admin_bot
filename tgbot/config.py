@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional
+import json
 
 from environs import Env
 
@@ -77,6 +78,7 @@ class TgBot:
     admin_ids: list[int | str]
     proxy_url: str
     use_redis: bool
+    console_log_level: str
 
     @staticmethod
     def from_env(env: Env):
@@ -86,12 +88,13 @@ class TgBot:
         token = env.str("BOT_TOKEN")
         admin_ids = list(map(int, env.list("ADMINS")))
         proxy_url = env.str("PROXY_URL")
+        console_log_level = env.str("CONSOLE_LOGGER_LVL")
         # admin_ids = list(map(
         #     lambda item: int(item) if isinstance(item, int) else str(item),
         #     env.list("ADMINS")
         # ))
         use_redis = env.bool("USE_REDIS")
-        return TgBot(token=token, admin_ids=admin_ids, proxy_url=proxy_url, use_redis=use_redis)
+        return TgBot(token=token, admin_ids=admin_ids, proxy_url=proxy_url, use_redis=use_redis, console_log_level=console_log_level)
 
 
 @dataclass
@@ -150,7 +153,18 @@ class Miscellaneous:
         A string used to hold other various parameters as required (default is None).
     """
 
-    other_params: str = None
+    locations_list: list[dict[str, str]]
+    other_params: str | None = None
+
+    @staticmethod
+    def from_env(env: Env):
+        """
+        Creates the Miscellaneous object from environment variables.
+        """
+        locations_str: str = env.str("LOCATIONS")
+        locations_list = json.loads(locations_str)
+
+        return Miscellaneous(locations_list=locations_list)
 
 
 @dataclass
@@ -178,7 +192,7 @@ class Config:
     redis: Optional[RedisConfig] = None
 
 
-def load_config(path: str = None) -> Config:
+def load_config(path: str | None = None) -> Config:
     """
     This function takes an optional file path as input and returns a Config object.
     :param path: The path of env file from where to load the configuration variables.
@@ -195,5 +209,5 @@ def load_config(path: str = None) -> Config:
         tg_bot=TgBot.from_env(env),
         # db=DbConfig.from_env(env),
         # redis=RedisConfig.from_env(env),
-        misc=Miscellaneous(),
+        misc=Miscellaneous.from_env(env),
     )

@@ -18,13 +18,6 @@ from tgbot.services.utils import delete_prev_message
 
 logger = logging.getLogger(__name__)
 
-# Let's create a simple list of locations for demonstration purposes
-LOCATIONS = [
-    {"id": 1, "title": "Салон 1", "address": "ул. Мира 1"},
-    {"id": 2, "title": "Салон 2", "address": "ул. Вокзальная 2"},
-    {"id": 3, "title": "Салон 3", "address": "ул. Третья 3"},
-]
-
 report_menu_router = Router()
 
 @report_menu_router.message(F.text == ReplyButtons.BTN_SEND_REPORT)
@@ -39,7 +32,7 @@ async def choose_daytime(message: Message, state: FSMContext):
 
 # We can use F.data filter to filter callback queries by data field from CallbackQuery object
 @report_menu_router.callback_query(F.data == "morning")
-async def choosed_morning(query: CallbackQuery, state: FSMContext):
+async def choosed_morning(query: CallbackQuery, state: FSMContext, config: Config):
     # Firstly, always answer callback query (as Telegram API requires)
     await query.answer()
 
@@ -48,7 +41,7 @@ async def choosed_morning(query: CallbackQuery, state: FSMContext):
     if query.message:
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
-            reply_markup=locations_keyboard(LOCATIONS)
+            reply_markup=locations_keyboard(config.misc.locations_list)
         )
         await state.update_data(daytime=query.data)
         await state.set_state(ReportMenuStates.choosing_location)
@@ -56,12 +49,12 @@ async def choosed_morning(query: CallbackQuery, state: FSMContext):
 
 
 @report_menu_router.callback_query(F.data == "evening")
-async def choosed_evening(query: CallbackQuery, state: FSMContext):
+async def choosed_evening(query: CallbackQuery, state: FSMContext, config: Config):
     await query.answer()
     if query.message:
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
-            reply_markup=locations_keyboard(LOCATIONS)
+            reply_markup=locations_keyboard(config.misc.locations_list)
         )
         await state.update_data(daytime=query.data)
         await state.set_state(ReportMenuStates.choosing_location)
@@ -73,7 +66,8 @@ async def choosed_evening(query: CallbackQuery, state: FSMContext):
 async def choose_location(
         query: CallbackQuery,
         callback_data: LocationCallbackData,
-        state: FSMContext
+        state: FSMContext,
+        config: Config
     ):
     await query.answer()
 
@@ -82,7 +76,7 @@ async def choose_location(
 
     # Then you can get the location from your database (here we use a simple list)
     location_info = next(
-        (location for location in LOCATIONS if location["id"] == location_id), None)
+        (location for location in config.misc.locations_list if location["id"] == location_id), None)
 
     if query.message:
         if location_info:

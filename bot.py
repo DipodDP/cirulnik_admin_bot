@@ -34,7 +34,7 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=Non
         dp.callback_query.outer_middleware(middleware_type)
 
 
-def setup_logging():
+def setup_logging(log_level: str):
     """
     Set up logging configuration for the application.
 
@@ -49,7 +49,7 @@ def setup_logging():
     Example usage:
         setup_logging()
     """
-    log_level = logging.DEBUG
+    # log_level = logging.DEBUG
     bl.basic_colorized_config(level=log_level)
 
     logging.basicConfig(
@@ -82,11 +82,10 @@ def get_storage(config):
 
 
 async def main():
-    setup_logging()
-
-    logger = logging.getLogger(__name__)
-
     config = load_config(".env")
+
+    setup_logging(config.tg_bot.console_log_level)
+    logger = logging.getLogger(__name__)
     logger.debug(config)
 
     storage = get_storage(config)
