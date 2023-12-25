@@ -1,3 +1,4 @@
+from types import NoneType
 from aiogram import Router, F, types
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
@@ -120,14 +121,26 @@ async def choose_location(
 async def complete_report(message: types.Message, state: FSMContext, config: Config):
     await message.delete()
     await delete_prev_message(state)
-    data = await state.get_data() 
+    # Saving user info to state
+    if message.from_user:
+        author = '\n'.join([
+            message.from_user.username if not None else '-',
+            message.from_user.full_name
+        ])
+        logger.debug(f'{author} {message.from_user.full_name}')
+    else: author = None
+
+    await state.update_data(
+        author=author)
+
+    state_data = await state.get_data() 
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
     await state.clear()
     await message.answer(ReportHandlerMessages.REPORT_COMPLETED,reply_markup=user_menu_keyboard())
-    if data['daytime'] == 'morning':
-        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(data).construct_morning_report())
-        await broadcast_message(config.tg_bot.admin_ids, data['open_check'])
-    elif data['daytime'] == 'evening':
-        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(data).construct_evening_report())
-        await broadcast_message(config.tg_bot.admin_ids, data['daily_excel'])
-        await broadcast_message(config.tg_bot.admin_ids, data['z_report'])
+    if state_data['daytime'] == 'morning':
+        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_morning_report())
+        await broadcast_message(config.tg_bot.admin_ids, state_data['open_check'])
+    elif state_data['daytime'] == 'evening':
+        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_evening_report())
+        await broadcast_message(config.tg_bot.admin_ids, state_data['daily_excel'])
+        await broadcast_message(config.tg_bot.admin_ids, state_data['z_report'])

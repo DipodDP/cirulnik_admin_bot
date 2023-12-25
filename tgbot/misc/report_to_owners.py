@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class ReportBuilder():
     def __init__(self, data: dict[str, Any]):
         self.location: Text | None = data['location']
+        self.author: str | None = '@' + data['author']
         # Morning report
         self.masters_quantity: str | None = data['masters_quantity'] if 'masters_quantity' in data else None
         self.latecomers: str | None = data['latecomers'] if 'latecomers' in data else None
@@ -34,7 +35,9 @@ class ReportBuilder():
             HashTag(self.location_text[0].split('\n')[0].split(': ')[1].replace(' ', '_')),
             self.location.as_kwargs()['text'] if self.location else None,
             as_section(
-                Bold('Mастеров на смене:'),
+                Bold('Администратор:'),
+                self.author,
+                Bold('\n\nMастеров на смене:\n'),
                 self.masters_quantity,
                 Bold('\n\nОпоздали:\n'),
                 self.latecomers,
@@ -52,7 +55,9 @@ class ReportBuilder():
             HashTag(self.location_text[0].split('\n')[0].split(': ')[1].replace(' ', '_')),
             self.location.as_kwargs()['text'] if self.location else None,
             as_section(
-                Bold('Упущено клиентов:'),
+                Bold('Администратор:'),
+                self.author,
+                Bold('\n\nУпущено клиентов:\n'),
                 self.clients_lost,
                 Bold('\n\nВсего клиентов:\n'),
                 self.total_clients,
