@@ -1,4 +1,3 @@
-from types import NoneType
 from aiogram import Router, F, types
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
@@ -10,9 +9,9 @@ from tgbot.config import Config
 from tgbot.keyboards.inline import daytime_keyboard, locations_keyboard, \
     LocationCallbackData
 from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_menu_keyboard
-from tgbot.messages.handlers_msg import ReportHandlerMessages
+from tgbot.messages.handlers_msg import ReportHandlerMessages, UserHandlerMessages
 from tgbot.misc.report_to_owners import ReportBuilder, on_report
-from tgbot.misc.states import ReportMenuStates
+from tgbot.misc.states import CommonStates, ReportMenuStates
 from tgbot.services.broadcaster import broadcast_message
 from tgbot.services.utils import delete_prev_message
 
@@ -21,7 +20,33 @@ logger = logging.getLogger(__name__)
 
 report_menu_router = Router()
 
-@report_menu_router.message(F.text == ReplyButtons.BTN_SEND_REPORT)
+
+@report_menu_router.message(CommonStates.unauthorized)
+async def user_auth(message: Message, state: FSMContext):
+    await message.delete()
+    await delete_prev_message(state)
+
+    # Saving user info to state
+    if user := message.from_user:
+        author = '\n'.join([
+            user.username if user.username else 'N/A',
+        ])
+
+        answer = await message.answer(UserHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard())
+        await state.update_data(prev_bot_message=answer)
+
+    else: author = None
+
+    await state.update_data(author=author)
+    await state.update_data(author_name=message.text)
+    await state.set_state(CommonStates.authorized)
+    logger.info(f'Logged user: @{author} as {message.text}')
+
+
+@report_menu_router.message(
+    F.text == ReplyButtons.BTN_SEND_REPORT,
+    CommonStates.authorized
+)
 async def choose_daytime(message: Message, state: FSMContext):
     await message.delete()
     await delete_prev_message(state)
@@ -121,21 +146,15 @@ async def choose_location(
 async def complete_report(message: types.Message, state: FSMContext, config: Config):
     await message.delete()
     await delete_prev_message(state)
-    # Saving user info to state
-    if message.from_user:
-        author = '\n'.join([
-            message.from_user.username if not None else '-',
-            message.from_user.full_name
-        ])
-        logger.debug(f'{author} {message.from_user.full_name}')
-    else: author = None
-
-    await state.update_data(
-        author=author)
 
     state_data = await state.get_data() 
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+
+    author, author_name = state_data['author'], state_data['author_name']
     await state.clear()
+    await state.update_data(author=author,author_name=author_name)
+    await CommonStates().set_auth(state)
+
     await message.answer(ReportHandlerMessages.REPORT_COMPLETED,reply_markup=user_menu_keyboard())
     if state_data['daytime'] == 'morning':
         await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_morning_report())
