@@ -1,4 +1,27 @@
+from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+
+
+class CommonStates(StatesGroup):
+    unauthorized = State()
+    authorized = State()
+
+    async def set_auth(self, state: FSMContext) -> bool:
+        """
+        Check if there is 'author in state' and sets 'authorized' state if so.
+        Return True if authorized.
+        :param state: state from FSM.
+        :type state: FSMContext
+        :return: bool
+        """
+        state_data = await state.get_data()
+        if 'author' in state_data:
+            await state.set_state(self.authorized)
+            return True
+        else: 
+            await state.set_state(self.unauthorized)
+            return False
+
 
 
 class ReportMenuStates(StatesGroup):

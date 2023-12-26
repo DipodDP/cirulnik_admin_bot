@@ -14,6 +14,7 @@ class AdminHandlerMessages(str, Enum):
 class UserHandlerMessages(str, Enum):
     GREETINGS = 'Привет, это бот администратора салонa "Цирюльник"' 
     HELP = f'Нажмите команду /start и кнопку "{ReplyButtons.BTN_SEND_REPORT.value}"'
+    AUTHORIZATION = 'Ввведите свое имя и фамилию'
 
 class ReportHandlerMessages(str, Enum):
     CHOOSE_DAYTIME = 'Выберите время суток:'

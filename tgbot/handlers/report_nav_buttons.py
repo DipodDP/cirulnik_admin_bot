@@ -1,4 +1,3 @@
-
 from aiogram import types, Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.context import FSMContext
@@ -9,7 +8,7 @@ from tgbot.handlers.report_evening import enter_clients_lost, enter_day_resume, 
 
 from tgbot.keyboards.reply import NavButtons, nav_keyboard, user_menu_keyboard
 from tgbot.messages.handlers_msg import ReportHandlerMessages
-from tgbot.misc.states import ReportMenuStates
+from tgbot.misc.states import CommonStates, ReportMenuStates
 from tgbot.services.utils import delete_prev_message
 
 
@@ -108,12 +107,16 @@ async def btn_cancel(message: types.Message, state: FSMContext):
 
     await message.delete()
     await delete_prev_message(state)
-    data = await state.get_data()
-    if 'location_message' in data:
-        location_message: types.Message = data['location_message']
+    state_data = await state.get_data()
+    if 'location_message' in state_data:
+        location_message: types.Message = state_data['location_message']
         await location_message.delete()
 
+    author, author_name = state_data['author'], state_data['author_name']
     await state.clear()
+    await state.update_data(author=author,author_name=author_name)
+    await CommonStates().set_auth(state)
+
     answer = await message.answer(ReportHandlerMessages.REPORT_CANCELED,reply_markup=user_menu_keyboard())
     await state.update_data(prev_bot_message=answer)
 

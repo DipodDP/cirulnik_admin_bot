@@ -7,6 +7,7 @@ from betterlogging import logging
 from tgbot.filters.admin import AdminFilter
 from tgbot.keyboards.reply import user_menu_keyboard
 from tgbot.messages.handlers_msg import AdminHandlerMessages
+from tgbot.misc.states import CommonStates
 from tgbot.services.utils import delete_prev_message
 
 
@@ -17,10 +18,17 @@ admin_router.message.filter(AdminFilter())
 
 @admin_router.message(CommandStart())
 async def admin_start(message: Message, state: FSMContext):
+    await message.delete()
     await delete_prev_message(state)
+
+    await state.set_state(CommonStates.authorized)
+    await state.update_data(
+        author=message.from_user.username,
+        author_name=message.from_user.full_name
+    ) if message.from_user else ...
+
     answer = await message.answer(AdminHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard())
     await state.update_data(prev_bot_message=answer)
-    await message.delete()
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
 
 

@@ -9,8 +9,8 @@ from .user import user_router
 
 routers_list = [
     admin_router,
-    report_menu_router,
     user_router,
+    report_menu_router,
     report_nav_buttons_router,
     report_morning_router,
     report_evening_router,
