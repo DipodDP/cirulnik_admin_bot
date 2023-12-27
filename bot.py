@@ -49,8 +49,8 @@ def setup_logging(log_level: str):
     Example usage:
         setup_logging()
     """
-    # log_level = logging.DEBUG
-    bl.basic_colorized_config(level=log_level)
+    # bl.basic_colorized_config(level=log_level)
+    logging.basicConfig(level=log_level)
 
     logging.basicConfig(
         level=logging.INFO,
@@ -122,4 +122,4 @@ if __name__ == "__main__":
         asyncio.run(main())
         # asyncio.gather(main(), return_exceptions=True).cancel()
     except (KeyboardInterrupt, SystemExit):
-        logging.error("Bot is stopped!")
+        logging.warning("Bot is stopped!")

@@ -115,7 +115,7 @@ async def btn_cancel(message: types.Message, state: FSMContext):
     author, author_name = state_data['author'], state_data['author_name']
     await state.clear()
     await state.update_data(author=author,author_name=author_name)
-    await CommonStates().set_auth(state)
+    await CommonStates().check_auth(state)
 
     answer = await message.answer(ReportHandlerMessages.REPORT_CANCELED,reply_markup=user_menu_keyboard())
     await state.update_data(prev_bot_message=answer)

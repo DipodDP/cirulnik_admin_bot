@@ -6,7 +6,7 @@ class CommonStates(StatesGroup):
     unauthorized = State()
     authorized = State()
 
-    async def set_auth(self, state: FSMContext) -> bool:
+    async def check_auth(self, state: FSMContext) -> bool:
         """
         Check if there is 'author in state' and sets 'authorized' state if so.
         Return True if authorized.

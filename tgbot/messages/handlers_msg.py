@@ -13,6 +13,7 @@ class AdminHandlerMessages(str, Enum):
 
 class UserHandlerMessages(str, Enum):
     GREETINGS = 'Привет, это бот администратора салонa "Цирюльник"' 
+    ASK_USERNAME = 'Ошибка, не указано имя пользователя Telegram!\n\nПожалуйста, укажите `Имя пользователя` в настройках аккаунта Telegram для продолжения работы с ботом.'
     HELP = f'Нажмите команду /start и кнопку "{ReplyButtons.BTN_SEND_REPORT.value}"'
     AUTHORIZATION = 'Ввведите свое имя и фамилию'
 
