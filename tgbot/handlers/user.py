@@ -27,7 +27,7 @@ async def user_start(message: Message, state: FSMContext):
     
     if auth := await CommonStates().check_auth(state):
         answer = await message.answer(
-            UserHandlerMessages.GREETINGS,
+            UserHandlerMessages.GREETINGS.format(user=state_data['author_name']),
             reply_markup=user_menu_keyboard()
         )
     else:
@@ -73,8 +73,10 @@ async def user_auth(message: Message, state: FSMContext):
         author = '\n'.join([
             user.username if user.username else 'N/A',
         ])
-
-        answer = await message.answer(UserHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard())
+        answer = await message.answer(
+            UserHandlerMessages.GREETINGS.format(user=message.text),
+            reply_markup=user_menu_keyboard()
+        )
         await state.update_data(prev_bot_message=answer)
 
     else: author = None

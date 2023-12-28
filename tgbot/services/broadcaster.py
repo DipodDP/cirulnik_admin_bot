@@ -88,10 +88,10 @@ async def broadcast(
     return count
 
 
-async def broadcast_message(
+async def broadcast_messages(
     # bot: Bot,
     users: list[Union[str, int]],
-    message: Message,
+    messages: list[Message],
     disable_notification: bool = False,
 ) -> int:
     """
@@ -105,8 +105,9 @@ async def broadcast_message(
     count = 0
     try:
         for user_id in users:
-            if await message.send_copy(user_id, disable_notification=disable_notification):
-                count += 1
+            for message in messages:
+                if await message.send_copy(user_id, disable_notification=disable_notification):
+                    count += 1
             await asyncio.sleep(
                 0.05
             )  # 20 messages per second (Limit: 30 messages per second)

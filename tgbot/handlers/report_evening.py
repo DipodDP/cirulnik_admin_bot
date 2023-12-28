@@ -1,5 +1,6 @@
 from aiogram import F, types, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types.message import Message
 from betterlogging import logging
 
 from tgbot.keyboards.reply import nav_keyboard, send_keyboard
@@ -33,20 +34,34 @@ async def enter_total_clients(message: types.Message, state: FSMContext):
     logger.debug(f'{await state.get_state()}, {(await state.get_data())}')
 
 @report_evening_router.message(F.photo, ReportMenuStates.uploading_daily_excel)
-async def upload_daily_excel(message: types.Message, state: FSMContext):
-    await message.delete()
+async def upload_daily_excel(
+        message: types.Message,
+        state: FSMContext,
+        album: list[Message] | None = None
+    ):
+    if album:
+        [await message.delete() for message in album]
+    else:
+        await message.delete()
     await delete_prev_message(state)
-    await state.update_data(daily_excel=message)
+    await state.update_data(daily_excel=album if album else [message])
     await state.set_state(ReportMenuStates.uploading_z_report)
     answer = await message.answer(ReportHandlerMessages.Z_REPORT,reply_markup=nav_keyboard())
     await state.update_data(prev_bot_message=answer)
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
 
 @report_evening_router.message(F.photo, ReportMenuStates.uploading_z_report)
-async def upload_z_report(message: types.Message, state: FSMContext):
-    await message.delete()
+async def upload_z_report(
+        message: types.Message,
+        state: FSMContext,
+        album: list[Message] | None = None
+    ):
+    if album:
+        [await message.delete() for message in album]
+    else:
+        await message.delete()
     await delete_prev_message(state)
-    await state.update_data(z_report=message)
+    await state.update_data(z_report=album if album else [message])
     await state.set_state(ReportMenuStates.entering_sbp_sum)
     answer = await message.answer(ReportHandlerMessages.SBP_SUM,reply_markup=nav_keyboard())
     await state.update_data(prev_bot_message=answer)

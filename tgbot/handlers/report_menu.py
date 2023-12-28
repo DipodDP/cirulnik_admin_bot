@@ -12,7 +12,7 @@ from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_m
 from tgbot.messages.handlers_msg import ReportHandlerMessages
 from tgbot.misc.report_to_owners import ReportBuilder, on_report
 from tgbot.misc.states import CommonStates, ReportMenuStates
-from tgbot.services.broadcaster import broadcast_message
+from tgbot.services.broadcaster import broadcast_messages
 from tgbot.services.utils import delete_prev_message
 
 
@@ -133,11 +133,17 @@ async def complete_report(message: types.Message, state: FSMContext, config: Con
     await state.update_data(author=author,author_name=author_name)
     await CommonStates().check_auth(state)
 
-    await message.answer(ReportHandlerMessages.REPORT_COMPLETED,reply_markup=user_menu_keyboard())
+    await message.answer(
+            ReportHandlerMessages.REPORT_EVENING_COMPLETED
+                if ['daytime'] == 'morning'
+                else ReportHandlerMessages.REPORT_MORNING_COMPLETED,
+        reply_markup=user_menu_keyboard()
+    )
+
     if state_data['daytime'] == 'morning':
         await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_morning_report())
-        await broadcast_message(config.tg_bot.admin_ids, state_data['open_check'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['open_check'])
     elif state_data['daytime'] == 'evening':
         await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_evening_report())
-        await broadcast_message(config.tg_bot.admin_ids, state_data['daily_excel'])
-        await broadcast_message(config.tg_bot.admin_ids, state_data['z_report'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['daily_excel'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['z_report'])

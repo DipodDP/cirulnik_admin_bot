@@ -1,5 +1,6 @@
 from aiogram import types, Router, F
 from aiogram.fsm.context import FSMContext
+from aiogram.types.message import Message
 from betterlogging import logging
 
 from tgbot.keyboards.reply import nav_keyboard, send_keyboard
@@ -44,10 +45,17 @@ async def enter_absent(message: types.Message, state: FSMContext):
 
 # To get high quality photo from message: F.photo[-1].as_('largest_photo')
 @report_morning_router.message(F.photo, ReportMenuStates.uploading_open_check)
-async def upload_open_reciept(message: types.Message, state: FSMContext):
-    await message.delete()
+async def upload_open_reciept(
+        message: types.Message,
+        state: FSMContext,
+        album: list[Message] | None = None
+    ):
+    if album:
+        [await message.delete() for message in album]
+    else:
+        await message.delete()
     await delete_prev_message(state)
-    await state.update_data(open_check=message)
+    await state.update_data(open_check=album if album else [message])
     await state.set_state(ReportMenuStates.completing_report)
     answer = await message.answer(ReportHandlerMessages.SEND_REPORT,reply_markup=send_keyboard())
     await state.update_data(prev_bot_message=answer)

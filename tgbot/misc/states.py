@@ -8,7 +8,7 @@ class CommonStates(StatesGroup):
 
     async def check_auth(self, state: FSMContext) -> bool:
         """
-        Check if there is 'author in state' and sets 'authorized' state if so.
+        Check if there is 'author' in state and sets 'authorized' state if so.
         Return True if authorized.
         :param state: state from FSM.
         :type state: FSMContext
@@ -21,7 +21,6 @@ class CommonStates(StatesGroup):
         else: 
             await state.set_state(self.unauthorized)
             return False
-
 
 
 class ReportMenuStates(StatesGroup):
