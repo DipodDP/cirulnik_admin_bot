@@ -9,7 +9,7 @@ from tgbot.config import Config
 from tgbot.keyboards.inline import daytime_keyboard, locations_keyboard, \
     LocationCallbackData
 from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_menu_keyboard
-from tgbot.messages.handlers_msg import ReportHandlerMessages
+from tgbot.messages.handlers_msg import ReportClientsLost, ReportHandlerMessages, ReportMastersQuantity
 from tgbot.misc.report_to_owners import ReportBuilder, on_report
 from tgbot.misc.states import CommonStates, ReportMenuStates
 from tgbot.services.broadcaster import broadcast_messages
@@ -101,10 +101,10 @@ async def choose_location(
             state_data = await state.get_data()
 
             if state_data['daytime'] == 'morning':
-                answer_text = ReportHandlerMessages.MASTERS_QUANTITY
+                answer_text = ReportHandlerMessages.MASTERS_QUANTITY + ReportMastersQuantity.MALE
                 next_state = ReportMenuStates.entering_masters_quantity
             else:
-                answer_text = ReportHandlerMessages.CLIENTS_LOST
+                answer_text = ReportHandlerMessages.CLIENTS_LOST + ReportClientsLost.MALE
                 next_state = ReportMenuStates.entering_clients_lost
 
             answer = await query.message.answer(answer_text,reply_markup=nav_keyboard())

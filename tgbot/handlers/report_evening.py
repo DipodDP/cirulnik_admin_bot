@@ -4,7 +4,7 @@ from aiogram.types.message import Message
 from betterlogging import logging
 
 from tgbot.keyboards.reply import nav_keyboard, send_keyboard
-from tgbot.messages.handlers_msg import ReportHandlerMessages
+from tgbot.messages.handlers_msg import ReportClientsLost, ReportHandlerMessages
 from tgbot.misc.states import ReportMenuStates
 from tgbot.services.utils import delete_prev_message
 
@@ -17,11 +17,33 @@ report_evening_router = Router()
 async def enter_clients_lost(message: types.Message, state: FSMContext):
     await message.delete()
     await delete_prev_message(state)
-    await state.update_data(clients_lost=message.text)
-    await state.set_state(ReportMenuStates.entering_total_clients)
-    answer = await message.answer(ReportHandlerMessages.TOTAL_CLIENTS, reply_markup=nav_keyboard())
-    await state.update_data(prev_bot_message=answer)
-    logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+
+    state_data = await state.get_data()
+    clients_lost = state_data['clients_lost'] if 'clients_lost' in state_data else {}
+    list_of_masters_types = list(ReportClientsLost)
+
+    for i, item in enumerate(list_of_masters_types):
+        if item.value not in clients_lost:
+            clients_lost.update({item.value: message.text})
+            await state.update_data(clients_lost=clients_lost)
+
+            if i+1 < len(list_of_masters_types):
+                answer = await message.answer(
+                    ReportHandlerMessages.CLIENTS_LOST +
+                    list_of_masters_types[i+1],
+                    reply_markup=nav_keyboard()
+                )
+                await state.update_data(prev_bot_message=answer)
+
+                break
+    else:
+        await state.set_state(ReportMenuStates.entering_total_clients)
+        answer = await message.answer(ReportHandlerMessages.TOTAL_CLIENTS, reply_markup=nav_keyboard())
+        await state.update_data(prev_bot_message=answer)
+
+    state_data = await state.get_data()
+    logger.debug(f"Clients lost: {state_data['clients_lost']}" if 'clients_lost' in state_data else None)
+    logger.debug(f'{(await state.get_state())}')
 
 @report_evening_router.message(ReportMenuStates.entering_total_clients)
 async def enter_total_clients(message: types.Message, state: FSMContext):
