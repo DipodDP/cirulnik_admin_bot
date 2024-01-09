@@ -85,16 +85,19 @@ async def btn_back(message: types.Message, state: FSMContext):
 
         case 'ReportMenuStates:uploading_z_report':
             await state.set_state(ReportMenuStates.entering_total_clients)
+            await state.update_data(z_report=[])
             await enter_total_clients(message, state)
             logger.debug(f'Back to state: {await state.get_state()}')
 
         case 'ReportMenuStates:entering_sbp_sum':
             await state.set_state(ReportMenuStates.uploading_daily_excel)
+            await state.update_data(z_report=[])
             await upload_daily_excel(message, state)
             logger.debug(f'Back to state: {await state.get_state()}')
 
         case 'ReportMenuStates:entering_day_resume':
             await state.set_state(ReportMenuStates.uploading_z_report)
+            message.text = NavButtons.BTN_NEXT
             await upload_z_report(message, state)
             logger.debug(f'Back to state: {await state.get_state()}')
 
@@ -119,9 +122,10 @@ async def btn_back(message: types.Message, state: FSMContext):
             logger.debug(f'Back to state: {await state.get_state()}')
 
     # Restoring data from previous step, except for some keys in state data
-    state_data.pop('prev_bot_message')
+    state_data.pop('prev_bot_message') if 'prev_bot_message' in state_data else ...
     state_data.pop('masters_quantity') if 'masters_quantity' in state_data else ...
     state_data.pop('clients_lost') if 'clients_lost' in state_data else ...
+    state_data.pop('z_report') if 'z_report' in state_data else ...
     await state.update_data(**state_data)
     logger.debug(f'Back from state: {current_state} to {await state.get_state()}')
 
@@ -132,13 +136,15 @@ async def btn_cancel(message: types.Message, state: FSMContext):
     await message.delete()
     await delete_prev_message(state)
     state_data = await state.get_data()
+    await state.clear()
     if 'location_message' in state_data:
         location_message: types.Message = state_data['location_message']
         await location_message.delete()
 
-    author, author_name = state_data['author'], state_data['author_name']
-    await state.clear()
-    await state.update_data(author=author,author_name=author_name)
+    if 'author' in state_data and 'author_name' in state_data:
+        author, author_name = state_data['author'], state_data['author_name']
+        await state.update_data(author=author,author_name=author_name)
+
     await CommonStates().check_auth(state)
 
     answer = await message.answer(ReportHandlerMessages.REPORT_CANCELED,reply_markup=user_menu_keyboard())

@@ -32,6 +32,20 @@ def nav_keyboard():
     keyboard.adjust(2)
     return keyboard.as_markup(resize_keyboard=True, input_field_placeholder='Введите ответ')
 
+def z_report_keyboard():
+    keyboard = ReplyKeyboardBuilder()
+    keyboard.button(
+        text=NavButtons.BTN_BACK
+    )
+    keyboard.button(
+        text=NavButtons.BTN_NEXT
+    )
+    keyboard.button(
+        text=NavButtons.BTN_CANCEL
+    )
+    keyboard.adjust(2)
+    return keyboard.as_markup(resize_keyboard=True, input_field_placeholder='Введите ответ')
+
 def send_keyboard():
     keyboard = ReplyKeyboardBuilder()
     keyboard.button(
