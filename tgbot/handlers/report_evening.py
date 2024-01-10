@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types.message import Message
 from betterlogging import logging
 
-from tgbot.keyboards.reply import NavButtons, nav_keyboard, send_keyboard, z_report_keyboard
+from tgbot.keyboards.reply import NavButtons, nav_keyboard, send_keyboard, excel_keyboard
 from tgbot.messages.handlers_msg import ReportClientsLost, ReportHandlerMessages
 from tgbot.misc.states import ReportMenuStates
 from tgbot.services.utils import delete_prev_message
@@ -51,32 +51,43 @@ async def enter_total_clients(message: types.Message, state: FSMContext):
     await delete_prev_message(state)
     await state.update_data(total_clients=message.text)
     await state.set_state(ReportMenuStates.uploading_daily_excel)
-    answer = await message.answer(ReportHandlerMessages.DAILY_EXCEL, reply_markup=nav_keyboard())
+    answer = await message.answer(ReportHandlerMessages.DAILY_EXCEL, reply_markup=excel_keyboard())
     await state.update_data(prev_bot_message=answer)
     logger.debug(f'{await state.get_state()}, {(await state.get_data())}')
 
-@report_evening_router.message(F.photo, ReportMenuStates.uploading_daily_excel)
+@report_evening_router.message(
+    F.photo | F.text.in_(NavButtons.BTN_NEXT),
+    ReportMenuStates.uploading_daily_excel
+    )
 async def upload_daily_excel(
         message: types.Message,
         state: FSMContext,
         album: list[Message] | None = None
     ):
-    if album:
-        [await message.delete() for message in album]
+    state_data = await state.get_data()
+    excel_photos: list = state_data['daily_excel'] if 'daily_excel' in state_data else []
+    logger.debug(f'{await state.get_state()}, excel photos: {len(excel_photos)}')
+
+    if message.text in (NavButtons.BTN_NEXT, NavButtons.BTN_BACK) and len(excel_photos) > 0:
+        await delete_prev_message(state)
+        if album:
+            [await message.delete() for message in album]
+        else:
+            await message.delete()
+        await state.set_state(ReportMenuStates.uploading_z_report)
+        answer = await message.answer(ReportHandlerMessages.Z_REPORT, reply_markup=nav_keyboard())
+        await state.update_data(prev_bot_message=answer)
+        logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+
     else:
-        await message.delete()
-    await delete_prev_message(state)
-    await state.update_data(daily_excel=album if album else [message])
-    await state.set_state(ReportMenuStates.uploading_z_report)
-    answer = await message.answer(
-        ReportHandlerMessages.Z_REPORT,
-        reply_markup=z_report_keyboard()
-    )
-    await state.update_data(prev_bot_message=answer)
-    logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+        for msg in album if album else [message]:
+            await msg.delete()
+            if msg.photo: excel_photos.append(msg)
+
+        await state.update_data(daily_excel=excel_photos)
 
 @report_evening_router.message(
-    F.photo | F.text.in_(NavButtons.BTN_NEXT),
+    F.photo,
     ReportMenuStates.uploading_z_report
 )
 async def upload_z_report(
@@ -84,27 +95,16 @@ async def upload_z_report(
         state: FSMContext,
         album: list[Message] | None = None
     ):
-    state_data = await state.get_data()
-    z_report_photos: list = state_data['z_report'] if 'z_report' in state_data else []
-    logger.debug(f'{await state.get_state()}, z_report photos: {len(z_report_photos)}')
-
-    if message.text == NavButtons.BTN_NEXT and len(z_report_photos) > 1:
-        await delete_prev_message(state)
-        if album:
-            [await message.delete() for message in album]
-        else:
-            await message.delete()
-        await state.set_state(ReportMenuStates.entering_sbp_sum)
-        answer = await message.answer(ReportHandlerMessages.SBP_SUM, reply_markup=nav_keyboard())
-        await state.update_data(prev_bot_message=answer)
-        logger.debug(f'{await state.get_state()}, {await state.get_data()}')
-
+    await delete_prev_message(state)
+    if album:
+        [await message.delete() for message in album]
     else:
-        for msg in album if album else [message]:
-            await msg.delete()
-            if msg.photo: z_report_photos.append(msg)
-
-        await state.update_data(z_report=z_report_photos)
+        await message.delete()
+    await state.set_state(ReportMenuStates.entering_sbp_sum)
+    await state.update_data(z_report=album if album else [message])
+    answer = await message.answer(ReportHandlerMessages.SBP_SUM, reply_markup=nav_keyboard())
+    await state.update_data(prev_bot_message=answer)
+    logger.debug(f'{await state.get_state()}, {await state.get_data()}')
 
 @report_evening_router.message(ReportMenuStates.entering_sbp_sum)
 async def enter_sbp_sum(message: types.Message, state: FSMContext):

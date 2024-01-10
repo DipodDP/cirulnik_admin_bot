@@ -80,24 +80,23 @@ async def btn_back(message: types.Message, state: FSMContext):
 
         case 'ReportMenuStates:uploading_daily_excel':
             await state.set_state(ReportMenuStates.entering_clients_lost)
+            await state.update_data(daily_excel=[])
             await enter_clients_lost(message, state)
             logger.debug(f'Back to state: {await state.get_state()}')
 
         case 'ReportMenuStates:uploading_z_report':
             await state.set_state(ReportMenuStates.entering_total_clients)
-            await state.update_data(z_report=[])
+            await state.update_data(daily_excel=[])
             await enter_total_clients(message, state)
             logger.debug(f'Back to state: {await state.get_state()}')
 
         case 'ReportMenuStates:entering_sbp_sum':
             await state.set_state(ReportMenuStates.uploading_daily_excel)
-            await state.update_data(z_report=[])
             await upload_daily_excel(message, state)
             logger.debug(f'Back to state: {await state.get_state()}')
 
         case 'ReportMenuStates:entering_day_resume':
             await state.set_state(ReportMenuStates.uploading_z_report)
-            message.text = NavButtons.BTN_NEXT
             await upload_z_report(message, state)
             logger.debug(f'Back to state: {await state.get_state()}')
 
@@ -125,7 +124,7 @@ async def btn_back(message: types.Message, state: FSMContext):
     state_data.pop('prev_bot_message') if 'prev_bot_message' in state_data else ...
     state_data.pop('masters_quantity') if 'masters_quantity' in state_data else ...
     state_data.pop('clients_lost') if 'clients_lost' in state_data else ...
-    state_data.pop('z_report') if 'z_report' in state_data else ...
+    state_data.pop('daily_excel') if 'daily_excel' in state_data else ...
     await state.update_data(**state_data)
     logger.debug(f'Back from state: {current_state} to {await state.get_state()}')
 

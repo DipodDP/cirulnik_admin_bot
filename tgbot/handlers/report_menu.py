@@ -134,9 +134,9 @@ async def complete_report(message: types.Message, state: FSMContext, config: Con
     await CommonStates().check_auth(state)
 
     await message.answer(
-            ReportHandlerMessages.REPORT_EVENING_COMPLETED
-                if ['daytime'] == 'morning'
-                else ReportHandlerMessages.REPORT_MORNING_COMPLETED,
+            ReportHandlerMessages.REPORT_MORNING_COMPLETED
+                if state_data['daytime'] == 'morning'
+                else ReportHandlerMessages.REPORT_EVENING_COMPLETED,
         reply_markup=user_menu_keyboard()
     )
 

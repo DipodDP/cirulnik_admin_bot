@@ -18,8 +18,8 @@ def user_menu_keyboard():
     keyboard.button(
         text=ReplyButtons.BTN_SEND_REPORT
     )
-    keyboard.adjust(1)
-    return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    keyboard.adjust(2)
+    return keyboard.as_markup(one_time_keyboard=True, resize_keyboard=True)
 
 def nav_keyboard():
     keyboard = ReplyKeyboardBuilder()
@@ -30,21 +30,21 @@ def nav_keyboard():
         text=NavButtons.BTN_CANCEL
     )
     keyboard.adjust(2)
-    return keyboard.as_markup(resize_keyboard=True, input_field_placeholder='Введите ответ')
+    return keyboard.as_markup(input_field_placeholder='Введите ответ', resize_keyboard=True)
 
-def z_report_keyboard():
+def excel_keyboard():
     keyboard = ReplyKeyboardBuilder()
-    keyboard.button(
-        text=NavButtons.BTN_BACK
-    )
     keyboard.button(
         text=NavButtons.BTN_NEXT
     )
     keyboard.button(
+        text=NavButtons.BTN_BACK
+    )
+    keyboard.button(
         text=NavButtons.BTN_CANCEL
     )
-    keyboard.adjust(2)
-    return keyboard.as_markup(resize_keyboard=True, input_field_placeholder='Введите ответ')
+    keyboard.adjust(1, 2)
+    return keyboard.as_markup(input_field_placeholder='Введите ответ', resize_keyboard=True)
 
 def send_keyboard():
     keyboard = ReplyKeyboardBuilder()

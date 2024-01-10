@@ -1,7 +1,5 @@
 from enum import Enum
 
-from aiogram.utils.markdown import hpre
-
 from tgbot.keyboards.reply import NavButtons, ReplyButtons
 
 
@@ -28,7 +26,7 @@ class ReportHandlerMessages(str, Enum):
     # Evening report messages
     CLIENTS_LOST = f"Сколько клиентов было упущено сегодня? Укажите количество:\n"
     TOTAL_CLIENTS = 'Укажите сколько всего клиентов было:'
-    DAILY_EXCEL = 'Загрузите фото ежедневного Excel отчета'
+    DAILY_EXCEL = f'Загрузите фото ежедневного Excel отчета.\nПосле загрузки лицевой и обратной стороны отчета нажмите кнопку {NavButtons.BTN_NEXT.value}'
     Z_REPORT = 'Загрузите фото зет отчета и сверки итогов'
     SBP_SUM = 'Введите сумму по СБП'
     DAY_RESUME = 'Расскажите как прошел день:'
@@ -37,8 +35,8 @@ class ReportHandlerMessages(str, Enum):
 
     SEND_REPORT = f'Нажмите кнопку "{NavButtons.BTN_SEND.value}" чтобы отправить отчет'
     REPORT_CANCELED = 'Отправка отчета отменена!'
-    REPORT_MORNING_COMPLETED = 'Спасибо, утренний отчет отправлен!☀️'
-    REPORT_EVENING_COMPLETED = 'Спасибо, вечерний отчет отправлен!🌙'
+    REPORT_MORNING_COMPLETED = 'Спасибо, утренний отчет отправлен! ☀️'
+    REPORT_EVENING_COMPLETED = 'Спасибо, вечерний отчет отправлен! 🌙'
 
 class ReportMastersQuantity(str, Enum):
     MALE = '- мужской зал:',

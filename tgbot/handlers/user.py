@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from betterlogging import logging
 from tgbot.keyboards.reply import user_menu_keyboard
 
@@ -37,7 +37,10 @@ async def user_start(message: Message, state: FSMContext):
                 answer = await message.answer(UserHandlerMessages.AUTHORIZATION)
 
             else:
-                answer = await message.answer(UserHandlerMessages.ASK_USERNAME)
+                answer = await message.answer(
+                    UserHandlerMessages.ASK_USERNAME,
+                    reply_markup=ReplyKeyboardRemove()
+                )
                 await state.clear()
         else:
             answer = None
