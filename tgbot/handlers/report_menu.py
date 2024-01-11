@@ -9,38 +9,16 @@ from tgbot.config import Config
 from tgbot.keyboards.inline import daytime_keyboard, locations_keyboard, \
     LocationCallbackData
 from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_menu_keyboard
-from tgbot.messages.handlers_msg import ReportHandlerMessages, UserHandlerMessages
+from tgbot.messages.handlers_msg import ReportClientsLost, ReportHandlerMessages, ReportMastersQuantity
 from tgbot.misc.report_to_owners import ReportBuilder, on_report
 from tgbot.misc.states import CommonStates, ReportMenuStates
-from tgbot.services.broadcaster import broadcast_message
+from tgbot.services.broadcaster import broadcast_messages
 from tgbot.services.utils import delete_prev_message
 
 
 logger = logging.getLogger(__name__)
 
 report_menu_router = Router()
-
-
-@report_menu_router.message(CommonStates.unauthorized)
-async def user_auth(message: Message, state: FSMContext):
-    await message.delete()
-    await delete_prev_message(state)
-
-    # Saving user info to state
-    if user := message.from_user:
-        author = '\n'.join([
-            user.username if user.username else 'N/A',
-        ])
-
-        answer = await message.answer(UserHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard())
-        await state.update_data(prev_bot_message=answer)
-
-    else: author = None
-
-    await state.update_data(author=author)
-    await state.update_data(author_name=message.text)
-    await state.set_state(CommonStates.authorized)
-    logger.info(f'Logged user: @{author} as {message.text}')
 
 
 @report_menu_router.message(
@@ -123,10 +101,10 @@ async def choose_location(
             state_data = await state.get_data()
 
             if state_data['daytime'] == 'morning':
-                answer_text = ReportHandlerMessages.MASTERS_QUANTITY
+                answer_text = ReportHandlerMessages.MASTERS_QUANTITY + ReportMastersQuantity.MALE
                 next_state = ReportMenuStates.entering_masters_quantity
             else:
-                answer_text = ReportHandlerMessages.CLIENTS_LOST
+                answer_text = ReportHandlerMessages.CLIENTS_LOST + ReportClientsLost.MALE
                 next_state = ReportMenuStates.entering_clients_lost
 
             answer = await query.message.answer(answer_text,reply_markup=nav_keyboard())
@@ -153,13 +131,19 @@ async def complete_report(message: types.Message, state: FSMContext, config: Con
     author, author_name = state_data['author'], state_data['author_name']
     await state.clear()
     await state.update_data(author=author,author_name=author_name)
-    await CommonStates().set_auth(state)
+    await CommonStates().check_auth(state)
 
-    await message.answer(ReportHandlerMessages.REPORT_COMPLETED,reply_markup=user_menu_keyboard())
+    await message.answer(
+            ReportHandlerMessages.REPORT_MORNING_COMPLETED
+                if state_data['daytime'] == 'morning'
+                else ReportHandlerMessages.REPORT_EVENING_COMPLETED,
+        reply_markup=user_menu_keyboard()
+    )
+
     if state_data['daytime'] == 'morning':
         await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_morning_report())
-        await broadcast_message(config.tg_bot.admin_ids, state_data['open_check'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['open_check'])
     elif state_data['daytime'] == 'evening':
         await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_evening_report())
-        await broadcast_message(config.tg_bot.admin_ids, state_data['daily_excel'])
-        await broadcast_message(config.tg_bot.admin_ids, state_data['z_report'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['daily_excel'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['z_report'])

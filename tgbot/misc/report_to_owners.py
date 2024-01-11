@@ -16,12 +16,12 @@ class ReportBuilder():
         self.author: str | None = '@' + data['author']
         self.author_name: str | None = data['author_name']
         # Morning report
-        self.masters_quantity: str | None = data['masters_quantity'] if 'masters_quantity' in data else None
+        self.masters_quantity: dict[str, str] = data['masters_quantity'] if 'masters_quantity' in data else {'data': 'N/A'}
         self.latecomers: str | None = data['latecomers'] if 'latecomers' in data else None
         self.absent: str | None = data['absent'] if 'absent' in data else None
         self.location_text: Tuple[str] = self.location.as_kwargs()['text'] if self.location else (''),
         # Evening report
-        self.clients_lost: str | None = data['clients_lost'] if 'clients_lost' in data else None
+        self.clients_lost: dict[str, str] = data['clients_lost'] if 'clients_lost' in data else {'data': 'N/A'}
         self.total_clients: str | None = data['total_clients'] if 'total_clients' in data else None
         self.sbp_sum: str | None = data['sbp_sum'] if 'sbp_sum' in data else None
         self.day_resume: str | None = data['day_resume'] if 'day_resume' in data else None
@@ -39,7 +39,9 @@ class ReportBuilder():
                 Bold('Администратор:'),
                 f'{self.author_name} ({self.author})',
                 Bold('\n\nMастеров на смене:\n'),
-                self.masters_quantity,
+                '\n'.join([
+                    f'{k} {v}' for k, v in self.masters_quantity.items()
+                ]),
                 Bold('\n\nОпоздали:\n'),
                 self.latecomers,
                 Bold('\n\nОтсутствуют:\n'),
@@ -59,7 +61,9 @@ class ReportBuilder():
                 Bold('Администратор:'),
                 f'{self.author_name} ({self.author})',
                 Bold('\n\nУпущено клиентов:\n'),
-                self.clients_lost,
+                '\n'.join([
+                    f'{k} {v}' for k, v in self.clients_lost.items()
+                ]),
                 Bold('\n\nВсего клиентов:\n'),
                 self.total_clients,
                 Bold('\n\nСумма СБП: \n'),

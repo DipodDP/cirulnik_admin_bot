@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from betterlogging import logging
 from tgbot.keyboards.reply import user_menu_keyboard
 
@@ -17,25 +17,42 @@ user_router = Router()
 
 @user_router.message(CommandStart())
 async def user_start(message: Message, state: FSMContext):
+    await message.delete()
     await delete_prev_message(state)
+
+    state_data = await state.get_data()
+    if 'location_message' in state_data:
+        location_message: Message = state_data['location_message']
+        await location_message.delete()
     
-    if auth := await CommonStates().set_auth(state):
+    if auth := await CommonStates().check_auth(state):
         answer = await message.answer(
-            UserHandlerMessages.GREETINGS,
+            UserHandlerMessages.GREETINGS.format(user=state_data['author_name']),
             reply_markup=user_menu_keyboard()
         )
     else:
-        answer = await message.answer(UserHandlerMessages.AUTHORIZATION)
+        # Checking if user has username
+        if user := message.from_user:
+            if user.username:
+                answer = await message.answer(UserHandlerMessages.AUTHORIZATION)
 
-    state_data = await state.get_data()
+            else:
+                answer = await message.answer(
+                    UserHandlerMessages.ASK_USERNAME,
+                    reply_markup=ReplyKeyboardRemove()
+                )
+                await state.clear()
+        else:
+            answer = None
+
+    await state.update_data(prev_bot_message=answer)
+
     logger.info(' '.join([
         f'Logged user: @{state_data["author"] if "author" in state_data else None}',
         f'{message.from_user.username if message.from_user else None}',
         f'authorized: {auth}'
     ]))
 
-    await message.delete()
-    await state.update_data(prev_bot_message=answer)
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
 
 
@@ -47,3 +64,27 @@ async def help(message: Message, state: FSMContext):
     await message.delete()
     await state.update_data(prev_bot_message=answer)
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+
+
+@user_router.message(CommonStates.unauthorized)
+async def user_auth(message: Message, state: FSMContext):
+    await message.delete()
+    await delete_prev_message(state)
+
+    # Saving user info to state
+    if user := message.from_user:
+        author = '\n'.join([
+            user.username if user.username else 'N/A',
+        ])
+        answer = await message.answer(
+            UserHandlerMessages.GREETINGS.format(user=message.text),
+            reply_markup=user_menu_keyboard()
+        )
+        await state.update_data(prev_bot_message=answer)
+
+    else: author = None
+
+    await state.update_data(author=author)
+    await state.update_data(author_name=message.text)
+    await state.set_state(CommonStates.authorized)
+    logger.info(f'Logged user: @{author} as {message.text}')

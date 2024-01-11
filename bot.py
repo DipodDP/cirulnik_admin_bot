@@ -4,6 +4,7 @@ from aiogram.client.session.aiohttp import AiohttpSession
 import betterlogging as bl
 from aiogram import Bot, Dispatcher, session
 from aiogram.fsm.storage.memory import MemoryStorage
+from tgbot.middlewares.albums_collector import AlbumsMiddleware
 from tgbot.misc.notify_admins import on_down, on_startup
 from tgbot.misc.setting_comands import set_all_default_commands
 # from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
@@ -26,6 +27,7 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=Non
     """
     middleware_types = [
         ConfigMiddleware(config),
+        AlbumsMiddleware(2)
         # DatabaseMiddleware(session_pool),
     ]
 
@@ -49,8 +51,8 @@ def setup_logging(log_level: str):
     Example usage:
         setup_logging()
     """
-    # log_level = logging.DEBUG
-    bl.basic_colorized_config(level=log_level)
+    # bl.basic_colorized_config(level=log_level)
+    logging.basicConfig(level=log_level)
 
     logging.basicConfig(
         level=logging.INFO,
@@ -122,4 +124,4 @@ if __name__ == "__main__":
         asyncio.run(main())
         # asyncio.gather(main(), return_exceptions=True).cancel()
     except (KeyboardInterrupt, SystemExit):
-        logging.error("Bot is stopped!")
+        logging.warning("Bot is stopped!")
