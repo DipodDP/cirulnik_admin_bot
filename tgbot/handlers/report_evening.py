@@ -65,7 +65,9 @@ async def enter_total_clients(message: types.Message, state: FSMContext):
     await state.update_data(total_clients=message.text)
     await state.set_state(ReportMenuStates.uploading_daily_excel)
     answer = await message.answer(
-        ReportHandlerMessages.DAILY_EXCEL, reply_markup=excel_keyboard()
+        ReportHandlerMessages.DAILY_EXCEL,
+        reply_markup=excel_keyboard(),
+        parse_mode='Markdown'
     )
     await state.update_data(prev_bot_message=answer)
     logger.debug(f"{await state.get_state()}, {(await state.get_data())}")
@@ -85,7 +87,7 @@ async def upload_daily_excel(
 
     if (
         message.text in (NavButtons.BTN_NEXT, NavButtons.BTN_BACK)
-        and len(excel_photos) > 0
+        and len(excel_photos) > 1
     ):
         await delete_prev_message(state)
         await message.delete()

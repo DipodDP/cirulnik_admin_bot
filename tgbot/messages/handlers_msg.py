@@ -28,7 +28,13 @@ class ReportHandlerMessages(str, Enum):
     # Evening report messages
     CLIENTS_LOST = "Сколько клиентов было упущено сегодня? Укажите количество:\n"
     TOTAL_CLIENTS = "Укажите сколько всего клиентов было:"
-    DAILY_EXCEL = f'Загрузите фото ежедневного Excel отчета.\nПосле загрузки лицевой и обратной стороны отчета нажмите кнопку \n"{NavButtons.BTN_NEXT.value}"'
+    DAILY_EXCEL = (
+        f'Загрузите фото ежедневного Excel отчета:\n\n'
+        '1. *Лицевой* стороны отчета\n' 
+        '2. *Oбратной* стороны отчета\n\n'
+        f'Затем нажмите "{NavButtons.BTN_NEXT.value}"\n'
+        f'Чтобы заменить загруженные фото нажмите "{NavButtons.BTN_BACK.value}"'
+        )
     Z_REPORT = "Загрузите фото зет отчета и сверки итогов"
     SBP_SUM = "Введите сумму по СБП"
     DAY_RESUME = "Расскажите как прошел день:"

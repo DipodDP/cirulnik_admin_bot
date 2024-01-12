@@ -17,7 +17,11 @@ def user_menu_keyboard():
     keyboard = ReplyKeyboardBuilder()
     keyboard.button(text=ReplyButtons.BTN_SEND_REPORT)
     keyboard.adjust()
-    return keyboard.as_markup(one_time_keyboard=True, resize_keyboard=True)
+    return keyboard.as_markup(
+        input_field_placeholder=f"Нажмите на кнопку {ReplyButtons.BTN_SEND_REPORT.value}",
+        one_time_keyboard=True,
+        resize_keyboard=True
+        )
 
 
 def nav_keyboard():
@@ -26,7 +30,7 @@ def nav_keyboard():
     keyboard.button(text=NavButtons.BTN_CANCEL)
     keyboard.adjust(2)
     return keyboard.as_markup(
-        input_field_placeholder="Введите ответ", resize_keyboard=True
+        input_field_placeholder="Введите ответ...", resize_keyboard=True
     )
 
 
@@ -37,7 +41,7 @@ def excel_keyboard():
     keyboard.button(text=NavButtons.BTN_CANCEL)
     keyboard.adjust(1, 2)
     return keyboard.as_markup(
-        input_field_placeholder="Прикрепите фото отчета",
+        input_field_placeholder="Прикрепите фото Excel отчета...",
         resize_keyboard=True,
     )
 
@@ -49,6 +53,6 @@ def send_keyboard():
     keyboard.button(text=NavButtons.BTN_CANCEL)
     keyboard.adjust(1, 2)
     return keyboard.as_markup(
-        input_field_placeholder=f"Нажмите на кнопку {NavButtons.BTN_NEXT.value}",
+        input_field_placeholder=f"Нажмите на кнопку {NavButtons.BTN_SEND.value}",
         resize_keyboard=True,
     )

@@ -34,13 +34,10 @@ async def user_start(message: Message, state: FSMContext):
         # Checking if user has username
         if user := message.from_user:
             if user.username:
-                answer = await message.answer(UserHandlerMessages.AUTHORIZATION)
+                answer = await message.answer(UserHandlerMessages.AUTHORIZATION, reply_markup=ReplyKeyboardRemove())
 
             else:
-                answer = await message.answer(
-                    UserHandlerMessages.ASK_USERNAME,
-                    reply_markup=ReplyKeyboardRemove()
-                )
+                answer = await message.answer(UserHandlerMessages.ASK_USERNAME, reply_markup=ReplyKeyboardRemove())
                 await state.clear()
         else:
             answer = None
