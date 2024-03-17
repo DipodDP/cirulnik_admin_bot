@@ -8,7 +8,7 @@ from tgbot.config import Config
 
 from tgbot.keyboards.inline import daytime_keyboard, locations_keyboard, \
     LocationCallbackData
-from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_menu_keyboard
+from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_menu_keyboard, send_keyboard
 from tgbot.messages.handlers_msg import ReportClientsLost, ReportHandlerMessages, ReportMastersQuantity
 from tgbot.misc.report_to_owners import ReportBuilder, on_report
 from tgbot.misc.states import CommonStates, ReportMenuStates
@@ -97,6 +97,7 @@ async def choose_location(
 
             location_message = await query.message.edit_text(text.as_html(), parse_mode=ParseMode.HTML)
             await state.update_data(location=text)
+            await state.update_data(location_id=location_id)
 
             state_data = await state.get_data()
 
@@ -118,6 +119,34 @@ async def choose_location(
 
         await state.update_data(prev_bot_message=answer, location_message=location_message,)
 
+    logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+
+@report_menu_router.message(F.photo, ReportMenuStates.uploading_solarium_counter)
+async def upload_solarium_counter(
+        message: types.Message,
+        state: FSMContext,
+        config: Config,
+        album: list[Message] | None = None,
+    ):
+    if album:
+        [await message.delete() for message in album]
+    else:
+        await message.delete()
+    await delete_prev_message(state)
+    await state.update_data(solarium_counter=album if album else [message])
+
+    state_data = await state.get_data()
+    if state_data["daytime"] == "morning":
+        await state.set_state(ReportMenuStates.completing_report)
+        answer = await message.answer(ReportHandlerMessages.SEND_REPORT, reply_markup=send_keyboard())
+
+    elif state_data["daytime"] == "evening":
+        await state.set_state(ReportMenuStates.uploading_z_report)
+        answer = await message.answer(
+            ReportHandlerMessages.Z_REPORT, reply_markup=nav_keyboard()
+        )
+       
+    await state.update_data(prev_bot_message=answer)
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
 
 @report_menu_router.message(F.text == NavButtons.BTN_SEND, ReportMenuStates.completing_report)
@@ -143,7 +172,9 @@ async def complete_report(message: types.Message, state: FSMContext, config: Con
     if state_data['daytime'] == 'morning':
         await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_morning_report())
         await broadcast_messages(config.tg_bot.admin_ids, state_data['open_check'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['solarium_counter']) if 'solarium_counter' in state_data else ...
     elif state_data['daytime'] == 'evening':
         await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_evening_report())
         await broadcast_messages(config.tg_bot.admin_ids, state_data['daily_excel'])
+        await broadcast_messages(config.tg_bot.admin_ids, state_data['solarium_counter']) if 'solarium_counter' in state_data else ...
         await broadcast_messages(config.tg_bot.admin_ids, state_data['z_report'])

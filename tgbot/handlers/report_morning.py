@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types.message import Message
 from betterlogging import logging
 
+from tgbot.config import Config
 from tgbot.keyboards.reply import nav_keyboard, send_keyboard
 from tgbot.messages.handlers_msg import ReportHandlerMessages, ReportMastersQuantity
 from tgbot.misc.states import ReportMenuStates
@@ -70,7 +71,8 @@ async def enter_absent(message: types.Message, state: FSMContext):
 async def upload_open_reciept(
         message: types.Message,
         state: FSMContext,
-        album: list[Message] | None = None
+        config: Config,
+        album: list[Message] | None = None,
     ):
     if album:
         [await message.delete() for message in album]
@@ -78,7 +80,17 @@ async def upload_open_reciept(
         await message.delete()
     await delete_prev_message(state)
     await state.update_data(open_check=album if album else [message])
-    await state.set_state(ReportMenuStates.completing_report)
-    answer = await message.answer(ReportHandlerMessages.SEND_REPORT,reply_markup=send_keyboard())
+
+    state_data = await state.get_data()
+    has_solarium = next((location['has_solarium'] for location in config.misc.locations_list if location['id'] == state_data['location_id']), None)
+    logger.debug(f"Location id: {state_data['location_id']}, has_solarium: {has_solarium}")
+
+    if has_solarium:
+        await state.set_state(ReportMenuStates.uploading_solarium_counter)
+        answer = await message.answer(ReportHandlerMessages.UPLOAD_SOLARIUM_COUNTER, reply_markup=nav_keyboard())
+    else: 
+        await state.set_state(ReportMenuStates.completing_report)
+        answer = await message.answer(ReportHandlerMessages.SEND_REPORT, reply_markup=send_keyboard())
+        
     await state.update_data(prev_bot_message=answer)
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
