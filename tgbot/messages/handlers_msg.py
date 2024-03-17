@@ -53,8 +53,8 @@ class ReportMastersQuantity(str, Enum):
     FEMALE = ("- женский зал:",)
     MANI = ("- маникюр:",)
     COSM = ("- косметолог:",)
-    EYEBOW = ("- бровист: ",)
-    LASH = "- лэшмейкер:"
+    # EYEBOW = ("- бровист: ",)
+    # LASH = "- лэшмейкер:"
 
 
 class ReportClientsLost(str, Enum):
