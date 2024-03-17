@@ -162,7 +162,17 @@ class Miscellaneous:
         Creates the Miscellaneous object from environment variables.
         """
         locations_str: str = env.str("LOCATIONS")
-        locations_list = json.loads(locations_str)
+
+        if not locations_str:
+            print("locations_str is empty")
+            # Handle the empty string case here
+        else:
+            try:
+                locations_list = json.loads(locations_str)
+            except json.JSONDecodeError:
+                print(locations_str)
+                print("Invalid JSON in locations_str")
+                # Handle the invalid JSON case here
 
         return Miscellaneous(locations_list=locations_list)
 

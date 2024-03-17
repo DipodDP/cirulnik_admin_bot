@@ -43,4 +43,6 @@ class ReportMenuStates(StatesGroup):
     entering_disgruntled_clients = State()
     entering_argues_with_masters = State()
 
+    # Common states
+    uploading_solarium_counter = State()
     completing_report = State()

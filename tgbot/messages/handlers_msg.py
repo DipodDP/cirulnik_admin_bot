@@ -9,7 +9,7 @@ class AdminHandlerMessages(str, Enum):
 
 
 class UserHandlerMessages(str, Enum):
-    GREETINGS = '{user}, добрый день, это бот администратора салонa "Цирюльник"'
+    GREETINGS = '{user}, добрый день, это бот администратора салонa "Цирюльникъ"'
     ASK_USERNAME = "Ошибка, не указано имя пользователя Telegram!\n\nПожалуйста, укажите `Имя пользователя` в настройках аккаунта Telegram для продолжения работы с ботом."
     HELP = f'Нажмите команду /start и кнопку "{ReplyButtons.BTN_SEND_REPORT.value}"'
     AUTHORIZATION = "Ввведите свое имя и фамилию"
@@ -24,6 +24,7 @@ class ReportHandlerMessages(str, Enum):
     LATECOMERS = "Есть ли опоздавшие? Кто?"
     ABSENT = "Есть ли не вышедшие на работу? Кто? Причина?"
     OPEN_CHECK = "Загрузите фото чека открытия смены"
+    UPLOAD_SOLARIUM_COUNTER = "Загрузите фото счетчика солярия"
 
     # Evening report messages
     CLIENTS_LOST = "Сколько клиентов было упущено сегодня? Укажите количество:\n"
