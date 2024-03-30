@@ -1,6 +1,6 @@
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramAPIError
 from betterlogging import logging
 
 
@@ -14,5 +14,5 @@ async def delete_prev_message(state: FSMContext):
             prev_bot_message: Message = user_data['prev_bot_message']
             logger.debug(prev_bot_message.message_id)
             await prev_bot_message.delete()
-        except TelegramBadRequest as e:
+        except (TelegramAPIError) as e:
             logger.exception(e.message)
