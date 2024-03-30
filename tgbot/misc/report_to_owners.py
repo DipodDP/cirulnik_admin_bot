@@ -35,8 +35,8 @@ class ReportBuilder():
             Bold(
                 'Утренний отчет ☀️'
             ),
-            HashTag(self.location_text[0].split('\n')[0].split(': ')[1].replace(' ', '_')),
             self.date.strftime('%d.%m.%y'),
+            HashTag(self.location_text[0].split('\n')[0].split(': ')[1].replace(' ', '_')),
             self.location.as_kwargs()['text'] if self.location else None,
             as_section(
                 Bold('Администратор:'),
@@ -58,6 +58,7 @@ class ReportBuilder():
             Bold(
                 'Вечерний отчет 🌙'
             ),
+            self.date.strftime('%d.%m.%y'),
             HashTag(self.location_text[0].split('\n')[0].split(': ')[1].replace(' ', '_')),
             self.location.as_kwargs()['text'] if self.location else None,
             as_section(
