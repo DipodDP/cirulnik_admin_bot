@@ -1,6 +1,7 @@
 from typing import Any, Tuple
 from aiogram import Bot
 from aiogram.enums import ParseMode
+from aiogram.types import DateTime
 from aiogram.utils.formatting import Bold, HashTag, Text, as_list, as_section
 from betterlogging import logging
 
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class ReportBuilder():
     def __init__(self, data: dict[str, Any]):
+        self.date: DateTime = DateTime.today()
         self.location: Text | None = data['location']
         self.author: str | None = '@' + data['author']
         self.author_name: str | None = data['author_name']
@@ -34,6 +36,7 @@ class ReportBuilder():
                 'Утренний отчет ☀️'
             ),
             HashTag(self.location_text[0].split('\n')[0].split(': ')[1].replace(' ', '_')),
+            self.date.strftime('%d.%m.%y'),
             self.location.as_kwargs()['text'] if self.location else None,
             as_section(
                 Bold('Администратор:'),
