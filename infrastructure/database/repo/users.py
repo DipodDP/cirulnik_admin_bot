@@ -1,7 +1,8 @@
 from typing import Optional
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.mysql import insert as my_insert
 
 from infrastructure.database.models import User
 from infrastructure.database.repo.base import BaseRepo
@@ -23,24 +24,39 @@ class UserRepo(BaseRepo):
         :param username: The user's username. It's an optional parameter.
         :return: User object, None if there was an error while making a transaction.
         """
-
-        insert_stmt = (
-            insert(User)
-            .values(
-                user_id=user_id,
-                username=username,
-                full_name=full_name,
-                language=language,
-            )
-            .on_conflict_do_update(
-                index_elements=[User.user_id],
-                set_=dict(
+        try:
+            insert_stmt = (
+                pg_insert(User)
+                .values(
+                    user_id=user_id,
                     username=username,
                     full_name=full_name,
-                ),
+                    language=language,
+                )
+                .on_conflict_do_update(
+                    index_elements=[User.user_id],
+                    set_=dict(
+                        username=username,
+                        full_name=full_name,
+                    ),
+                )
+                .returning(User)
             )
-            .returning(User)
-        )
+        except AttributeError:
+            insert_stmt = (
+                my_insert(User)
+                .values(
+                    user_id=user_id,
+                    username=username,
+                    full_name=full_name,
+                    language=language,
+                )
+                .on_duplicate_key_update(
+                    username=username,
+                    full_name=full_name,
+                )
+            )
+
         result = await self.session.execute(insert_stmt)
 
         await self.session.commit()
