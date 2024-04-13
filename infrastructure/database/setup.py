@@ -5,7 +5,7 @@ from tgbot.config import DbConfig
 
 def create_engine(db: DbConfig, echo=False):
     engine = create_async_engine(
-        db.construct_sqlalchemy_url(),
+        db.construct_sqlalchemy_url(db.dialect, db.driver),
         query_cache_size=1200,
         pool_size=20,
         max_overflow=200,

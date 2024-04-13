@@ -13,6 +13,9 @@ from tgbot.config import load_config, Config
 from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware
 
+# from infrastructure.database.repo.requests import engine, session_pool 
+# from infrastructure.database.models import * 
+
 
 def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=None):
     """
@@ -27,7 +30,7 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=Non
     """
     middleware_types = [
         ConfigMiddleware(config),
-        AlbumsMiddleware(2)
+        AlbumsMiddleware(2),
         # DatabaseMiddleware(session_pool),
     ]
 
