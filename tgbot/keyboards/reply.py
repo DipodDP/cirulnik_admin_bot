@@ -41,7 +41,7 @@ def excel_keyboard():
     keyboard.button(text=NavButtons.BTN_CANCEL)
     keyboard.adjust(1, 2)
     return keyboard.as_markup(
-        input_field_placeholder="Прикрепите фото Excel отчета...",
+        input_field_placeholder=f"Прикрепите фото Excel отчета. Чтобы заменить фото нажмите {NavButtons.BTN_BACK}",
         resize_keyboard=True,
     )
 
