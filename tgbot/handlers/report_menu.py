@@ -6,13 +6,11 @@ from aiogram.utils.formatting import as_section, as_key_value, as_marked_list
 from betterlogging import logging
 from tgbot.config import Config
 
-from tgbot.keyboards.inline import daytime_keyboard, locations_keyboard, \
-    LocationCallbackData
+from tgbot.keyboards.inline import daytime_keyboard, locations_keyboard, LocationCallbackData
 from tgbot.keyboards.reply import NavButtons, ReplyButtons, nav_keyboard, user_menu_keyboard, send_keyboard
 from tgbot.messages.handlers_msg import ReportClientsLost, ReportHandlerMessages, ReportMastersQuantity
 from tgbot.misc.report_to_owners import ReportBuilder, on_report
 from tgbot.misc.states import CommonStates, ReportMenuStates
-from tgbot.services.broadcaster import broadcast_messages
 from tgbot.services.utils import delete_prev_message
 
 
@@ -170,11 +168,13 @@ async def complete_report(message: types.Message, state: FSMContext, config: Con
     )
 
     if state_data['daytime'] == 'morning':
-        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_morning_report())
-        await broadcast_messages(config.tg_bot.admin_ids, state_data['open_check'])
-        await broadcast_messages(config.tg_bot.admin_ids, state_data['solarium_counter']) if 'solarium_counter' in state_data else ...
+        report = ReportBuilder(state_data)
+        text = report.construct_morning_report()
+        media = report.build_album()
+        await on_report(message.bot, config.tg_bot.admin_ids, text, media)
+
     elif state_data['daytime'] == 'evening':
-        await on_report(message.bot, config.tg_bot.admin_ids, ReportBuilder(state_data).construct_evening_report())
-        await broadcast_messages(config.tg_bot.admin_ids, state_data['daily_excel'])
-        await broadcast_messages(config.tg_bot.admin_ids, state_data['solarium_counter']) if 'solarium_counter' in state_data else ...
-        await broadcast_messages(config.tg_bot.admin_ids, state_data['z_report'])
+        report = ReportBuilder(state_data)
+        text = report.construct_evening_report()
+        media = report.build_album()
+        await on_report(message.bot, config.tg_bot.admin_ids, text, media)

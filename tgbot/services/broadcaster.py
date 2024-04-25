@@ -6,6 +6,7 @@ from aiogram import Bot
 from aiogram import exceptions
 from aiogram.enums import ParseMode
 from aiogram.types import InlineKeyboardMarkup, Message
+from aiogram.utils.media_group import MediaType
 
 
 async def send_message(
@@ -14,7 +15,8 @@ async def send_message(
     text: str,
     disable_notification: bool = False,
     reply_markup: InlineKeyboardMarkup | None = None,
-    parse_mode: ParseMode | None = None
+    parse_mode: ParseMode | None = None,
+    media: list[MediaType] = []
 ) -> bool:
     """
     Safe messages sender
@@ -24,16 +26,25 @@ async def send_message(
     :param text: text of the message.
     :param disable_notification: disable notification or not.
     :param reply_markup: reply markup.
+    :param media: list of media, only if sending meadiafile or album.
     :return: success.
     """
+
     try:
-        await bot.send_message(
-            user_id,
-            text,
-            disable_notification=disable_notification,
-            reply_markup=reply_markup,
-            parse_mode=parse_mode
-        )
+        if len(media) == 0:
+            await bot.send_message(
+                user_id,
+                text,
+                disable_notification=disable_notification,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode
+            )
+        else:
+            await bot.send_media_group(
+                user_id,
+                media,
+                disable_notification=disable_notification,
+            )
     except exceptions.TelegramBadRequest as e:
         logging.error("Telegram server says - Bad Request: chat not found")
     except exceptions.TelegramForbiddenError:
@@ -44,7 +55,7 @@ async def send_message(
         )
         await asyncio.sleep(e.retry_after)
         return await send_message(
-            bot, user_id, text, disable_notification, reply_markup, parse_mode
+            bot, user_id, text, disable_notification, reply_markup, parse_mode, media
         )  # Recursive call
     except exceptions.TelegramAPIError:
         logging.exception(f"Target [ID:{user_id}]: failed")
@@ -60,7 +71,8 @@ async def broadcast(
     text: str,
     disable_notification: bool = False,
     reply_markup: InlineKeyboardMarkup | None = None,
-    parse_mode: ParseMode | None = None
+    parse_mode: ParseMode | None = None,
+    media = []
 ) -> int:
     """
     Simple broadcaster.
@@ -69,14 +81,17 @@ async def broadcast(
     :param text: Text of the message.
     :param disable_notification: Disable notification or not.
     :param reply_markup: Reply markup.
-    :parse_mode: ParseMode
+    :parse_mode: Parse mode, default is MARKDOWN_V2.
     :return: Count of messages.
     """
+
+    logging.info(f"-------Report Content-------\nReport text:\n{text}\n----------\nReport media:\n{media}")
+
     count = 0
     try:
         for user_id in users:
             if await send_message(
-                bot, user_id, text, disable_notification, reply_markup, parse_mode
+                bot, user_id, text, disable_notification, reply_markup, parse_mode, media
             ):
                 count += 1
             await asyncio.sleep(
@@ -88,8 +103,7 @@ async def broadcast(
     return count
 
 
-async def broadcast_messages(
-    # bot: Bot,
+async def broadcast_messages_copies(
     users: list[Union[str, int]],
     messages: list[Message],
     disable_notification: bool = False,
