@@ -3,9 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.database.repo.users import UserRepo
-from infrastructure.database.setup import create_engine
-from tgbot.config import load_config
-
+    
 
 @dataclass
 class RequestsRepo:
@@ -28,10 +26,15 @@ class RequestsRepo:
 if __name__ == "__main__":
     import asyncio
 
+    from infrastructure.database.models import * 
+    from tgbot.config import load_config
+    from infrastructure.database.setup import create_engine
     from infrastructure.database.setup import create_session_pool
     from tgbot.config import Config
-    
-    from infrastructure.database.models import * 
+
+    config = load_config(".env")
+    engine = create_engine(config.db, echo=True)
+    session_pool = create_session_pool(engine)
 
     async def example_usage(config: Config):
         """
@@ -40,8 +43,6 @@ if __name__ == "__main__":
         Pass the config object to this function for initializing the database resources.
         :param config: The config object loaded from your configuration.
         """
-        engine = create_engine(config.db, echo=True)
-        session_pool = create_session_pool(engine)
 
         async with session_pool() as session:
             repo = RequestsRepo(session)

@@ -24,7 +24,7 @@ class DatabaseMiddleware(BaseMiddleware):
                 event.from_user.full_name,
                 event.from_user.language_code,
                 event.from_user.username
-            )
+           ) if event.from_user is not None else None
 
             data["session"] = session
             data["repo"] = repo
