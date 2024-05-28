@@ -2,7 +2,7 @@ import asyncio
 import logging
 from aiogram.client.session.aiohttp import AiohttpSession
 import betterlogging as bl
-from aiogram import Bot, Dispatcher, session
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from infrastructure.database.setup import create_engine, create_session_pool
 from tgbot.middlewares.albums_collector import AlbumsMiddleware

@@ -42,7 +42,7 @@ async def choosed_morning(query: CallbackQuery, state: FSMContext, config: Confi
 
     # This method will send an answer to the message with the button, that user pressed
     # Here query - is a CallbackQuery object, which contains message: Message object
-    if query.message:
+    if isinstance(query.message, Message):
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
             reply_markup=locations_keyboard(config.misc.locations_list)
@@ -55,7 +55,7 @@ async def choosed_morning(query: CallbackQuery, state: FSMContext, config: Confi
 @report_menu_router.callback_query(F.data == "evening")
 async def choosed_evening(query: CallbackQuery, state: FSMContext, config: Config):
     await query.answer()
-    if query.message:
+    if isinstance(query.message, Message):
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
             reply_markup=locations_keyboard(config.misc.locations_list)
@@ -82,7 +82,7 @@ async def choose_location(
     location_info = next(
         (location for location in config.misc.locations_list if location["id"] == location_id), None)
 
-    if query.message:
+    if isinstance(query.message, Message):
         if location_info:
             # Here we use aiogram.utils.formatting to format the text
             # https://docs.aiogram.dev/en/latest/utils/formatting.html
@@ -145,6 +145,8 @@ async def upload_solarium_counter(
         answer = await message.answer(
             ReportHandlerMessages.Z_REPORT, reply_markup=nav_keyboard()
         )
+    else:
+        answer = None
        
     await state.update_data(prev_bot_message=answer)
     logger.debug(f'{await state.get_state()}, {await state.get_data()}')
