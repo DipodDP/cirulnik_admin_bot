@@ -17,7 +17,6 @@ flask = "^3.0.0"
 cachetools = "^5.3.2"
 sqlalchemy = "^2.0.29"
 alembic = "^1.13.1"
-asyncpg = "^0.29.0"
 
 [tool.poetry.group.dev.dependencies]
 psycopg2-binary = "^2.9.9"

@@ -19,9 +19,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-tg_config = load_config()
-if tg_config.db is not None:
-    config.set_main_option("sqlalchemy.url", tg_config.db.construct_sqlalchemy_url())
+db = load_config().db
+if db is not None:
+    config.set_main_option("sqlalchemy.url", db.construct_sqlalchemy_url(db.dialect, db.driver))
 
 # add your model's MetaData object here
 # for 'autogenerate' support

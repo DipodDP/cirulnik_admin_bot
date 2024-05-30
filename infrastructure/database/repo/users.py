@@ -1,5 +1,4 @@
 from typing import Optional
-
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
@@ -13,7 +12,7 @@ class UserRepo(BaseRepo):
         self,
         user_id: int,
         full_name: str,
-        language: str | None,
+        language: str,
         username: Optional[str] = None,
     ):
         """
@@ -42,7 +41,12 @@ class UserRepo(BaseRepo):
                 )
                 .returning(User)
             )
-        except AttributeError:
+
+            result = await self.session.execute(insert_stmt)
+            await self.session.commit()
+            return result.scalar_one()
+
+        except Exception:
             insert_stmt = (
                 my_insert(User)
                 .values(
@@ -57,7 +61,18 @@ class UserRepo(BaseRepo):
                 )
             )
 
-        result = await self.session.execute(insert_stmt)
+            result = await self.session.execute(insert_stmt)
+            await self.session.commit()
+            return vars(result)
 
-        await self.session.commit()
-        return result.scalar_one()
+    async def get_user_by_id(self, telegram_id: int):
+        select_stmt = select(User).where(User.user_id == telegram_id)
+        result = await self.session.execute(select_stmt)
+
+        return result.scalars().first()
+
+    async def get_all_users(self):
+        select_stmt = select(User)
+        result = await self.session.execute(select_stmt)
+
+        return result.scalars().all()
