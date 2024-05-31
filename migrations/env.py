@@ -21,7 +21,8 @@ if config.config_file_name is not None:
 
 db = load_config().db
 if db is not None:
-    config.set_main_option("sqlalchemy.url", db.construct_sqlalchemy_url(db.dialect, db.driver))
+    config.set_main_option("sqlalchemy.url", url := db.construct_sqlalchemy_url(db.dialect, db.driver))
+    print(f'--- DB URL: { url }')
 
 # add your model's MetaData object here
 # for 'autogenerate' support

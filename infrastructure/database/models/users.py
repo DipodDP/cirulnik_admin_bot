@@ -34,6 +34,7 @@ class User(Base, TimestampMixin, TableNameMixin):
     user_id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=False)
     username: Mapped[Optional[str]] = mapped_column(String(128))
     full_name: Mapped[str] = mapped_column(String(128))
+    logged_as: Mapped[Optional[str]] = mapped_column(String(128))
     active: Mapped[bool] = mapped_column(Boolean, server_default=true())
     language: Mapped[str] = mapped_column(String(10), server_default=text("'en'"))
 

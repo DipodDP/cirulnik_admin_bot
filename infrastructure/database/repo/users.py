@@ -14,6 +14,8 @@ class UserRepo(BaseRepo):
         full_name: str,
         language: str,
         username: Optional[str] = None,
+        logged_as: Optional[str] = None,
+
     ):
         """
         Creates or updates a new user in the database and returns the user object.
@@ -31,12 +33,14 @@ class UserRepo(BaseRepo):
                     username=username,
                     full_name=full_name,
                     language=language,
+                    logged_as=logged_as
                 )
                 .on_conflict_do_update(
                     index_elements=[User.user_id],
                     set_=dict(
                         username=username,
                         full_name=full_name,
+                        logged_as=logged_as
                     ),
                 )
                 .returning(User)
@@ -54,10 +58,12 @@ class UserRepo(BaseRepo):
                     username=username,
                     full_name=full_name,
                     language=language,
+                    logged_as=logged_as
                 )
                 .on_duplicate_key_update(
                     username=username,
                     full_name=full_name,
+                    logged_as=logged_as
                 )
             )
 
@@ -72,7 +78,15 @@ class UserRepo(BaseRepo):
         return result.scalars().first()
 
     async def get_all_users(self):
-        select_stmt = select(User)
+        select_stmt = select(User).order_by(
+                User.username.asc()
+                ).having(User.active)
         result = await self.session.execute(select_stmt)
 
         return result.scalars().all()
+
+    async def get_user_logged_as(self, telegram_id: int):
+            select_stmt = select(User.logged_as).where(User.user_id == telegram_id)
+            result = await self.session.execute(select_stmt)
+
+            return result.scalar()
