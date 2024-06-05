@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-from infrastructure.database.models import *
+from infrastructure.database.models import Base 
 from tgbot.config import load_config
 
 # this is the Alembic Config object, which provides
@@ -21,14 +21,17 @@ if config.config_file_name is not None:
 
 db = load_config().db
 if db is not None:
-    config.set_main_option("sqlalchemy.url", url := db.construct_sqlalchemy_url(db.dialect, db.driver))
-    print(f'--- DB URL: { url }')
+    config.set_main_option(
+        "sqlalchemy.url",
+        url := db.construct_sqlalchemy_url(db.dialect, db.driver)
+    )
+    print(f"-----DB URL-----:\n{ url }")
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = base.Base.metadata
+target_metadata = Base.metadata
 # target_metadata = None
 
 # other values from the config, defined by the needs of env.py,

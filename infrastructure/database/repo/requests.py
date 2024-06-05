@@ -83,12 +83,11 @@ if __name__ == "__main__":
 
 
     async def main():
-        # await example_usage(config)
+        await example_usage()
         await seed_fake_data()
 
 
     try:
         asyncio.run(main())
-        # asyncio.gather(main(), return_exceptions=True).cancel()
     except (KeyboardInterrupt, SystemExit):
         ...

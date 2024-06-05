@@ -12,7 +12,7 @@ class UserRepo(BaseRepo):
         self,
         user_id: int,
         full_name: str,
-        language: str,
+        language: Optional[str] = None,
         username: Optional[str] = None,
         logged_as: Optional[str] = None,
 

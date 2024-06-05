@@ -1,21 +1,22 @@
 import asyncio
 import logging
-from aiogram.client.session.aiohttp import AiohttpSession
+
 import betterlogging as bl
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.memory import MemoryStorage
-from infrastructure.database.setup import create_engine, create_session_pool
-from tgbot.middlewares.albums_collector import AlbumsMiddleware
-from tgbot.misc.notify_admins import on_down, on_startup
-from tgbot.misc.setting_comands import set_all_default_commands
-# from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
-from tgbot.config import load_config, Config
+from infrastructure.database.models import *
+from infrastructure.database.setup import create_engine, create_session_pool
+
+# from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
+from tgbot.config import Config, load_config
 from tgbot.handlers import routers_list
+from tgbot.middlewares.albums_collector import AlbumsMiddleware
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.middlewares.database import DatabaseMiddleware
-
-from infrastructure.database.models import * 
+from tgbot.misc.notify_admins import on_down, on_startup
+from tgbot.misc.setting_comands import set_all_default_commands
 
 
 def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=None):
@@ -98,12 +99,14 @@ async def main():
 
     # Proxy URL with credentials:
     # "protocol://user:password@host:port"
-    session = AiohttpSession(config.tg_bot.proxy_url) if config.tg_bot.proxy_url else None
+    session = (
+        AiohttpSession(config.tg_bot.proxy_url) if config.tg_bot.proxy_url else None
+    )
     bot = Bot(token=config.tg_bot.token, parse_mode="HTML", session=session)
     dp = Dispatcher(storage=storage)
 
     dp.include_routers(*routers_list)
-    
+
     session_pool = None
     if config.db:
         engine = create_engine(config.db, echo=True)
