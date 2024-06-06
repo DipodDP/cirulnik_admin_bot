@@ -11,11 +11,10 @@ class UserRepo(BaseRepo):
     async def get_or_create_user(
         self,
         user_id: int,
-        full_name: str,
+        full_name: Optional[str] = None,
         language: Optional[str] = None,
         username: Optional[str] = None,
         logged_as: Optional[str] = None,
-
     ):
         """
         Creates or updates a new user in the database and returns the user object.
@@ -47,8 +46,6 @@ class UserRepo(BaseRepo):
             )
 
             result = await self.session.execute(insert_stmt)
-            await self.session.commit()
-            return result.scalar_one()
 
         except Exception:
             insert_stmt = (
@@ -67,9 +64,21 @@ class UserRepo(BaseRepo):
                 )
             )
 
-            result = await self.session.execute(insert_stmt)
-            await self.session.commit()
-            return vars(result)
+            await self.session.execute(insert_stmt)
+            # Flush the session to ensure the insert/update operation is executed
+            await self.session.flush()
+            # Query the user after insertion/updation
+            user_query = select(User).where(User.user_id == user_id)
+            result = await self.session.execute(user_query)
+
+        await self.session.commit()
+        scalar = result.scalar_one()
+        # print(
+        #     '\n____Result_content____\n',
+        #     scalar := result.scalar_one(),
+        #     '\n______________________\n',
+        # )
+        return scalar
 
     async def get_user_by_id(self, telegram_id: int):
         select_stmt = select(User).where(User.user_id == telegram_id)

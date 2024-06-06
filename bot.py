@@ -102,7 +102,7 @@ async def main():
     session = (
         AiohttpSession(config.tg_bot.proxy_url) if config.tg_bot.proxy_url else None
     )
-    bot = Bot(token=config.tg_bot.token, parse_mode="HTML", session=session)
+    bot = Bot(token=config.tg_bot.token, session=session)
     dp = Dispatcher(storage=storage)
 
     dp.include_routers(*routers_list)

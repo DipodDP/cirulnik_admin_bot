@@ -1,5 +1,6 @@
 """Import all routers and add them to routers_list."""
 from .admin import admin_router
+from .auth import auth_router
 from .echo import echo_router
 from .report_menu import report_menu_router
 from .report_morning import report_morning_router
@@ -14,6 +15,7 @@ routers_list = [
     report_menu_router,
     report_morning_router,
     report_evening_router,
+    auth_router,
     echo_router,  # echo_router must be last
 ]
 

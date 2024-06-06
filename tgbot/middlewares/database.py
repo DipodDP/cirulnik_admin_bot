@@ -33,7 +33,7 @@ class DatabaseMiddleware(BaseMiddleware):
 
             # access to session in handlers: repo.session.execute(stmt)
             data["repo"] = repo
-            data["user"] = user
+            data["user_from_db"] = user
 
             result = await handler(event, data)
         return result

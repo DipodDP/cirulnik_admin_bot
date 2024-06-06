@@ -21,10 +21,10 @@ async def user_start(message: Message, state: FSMContext):
     await delete_prev_message(state)
 
     state_data = await state.get_data()
-    if 'location_message' in state_data:
-        location_message: Message = state_data['location_message']
+    location_message: Message | None = state_data.get('location_message')
+    if location_message:
         await location_message.delete()
-    
+
     if auth := await CommonStates().check_auth(state):
         answer = await message.answer(
             UserHandlerMessages.GREETINGS.format(user=state_data['author_name']),
@@ -79,7 +79,8 @@ async def user_auth(message: Message, state: FSMContext):
         )
         await state.update_data(prev_bot_message=answer)
 
-    else: author = None
+    else:
+        author = None
 
     await state.update_data(author=author)
     await state.update_data(author_name=message.text)
