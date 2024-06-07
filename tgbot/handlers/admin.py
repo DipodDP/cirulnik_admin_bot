@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 admin_router = Router()
 admin_router.message.filter(AdminFilter())
 
+
 @admin_router.message(CommandStart())
 async def admin_start(message: Message, state: FSMContext):
     await message.delete()
@@ -23,16 +24,17 @@ async def admin_start(message: Message, state: FSMContext):
 
     await state.set_state(CommonStates.authorized)
     await state.update_data(
-        author=message.from_user.username,
-        author_name=message.from_user.full_name
+        author=message.from_user.username, author_name=message.from_user.full_name
     ) if message.from_user else ...
 
-    answer = await message.answer(AdminHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard())
+    answer = await message.answer(
+        AdminHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard()
+    )
     await state.update_data(prev_bot_message=answer)
-    logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+    logger.debug(f"{await state.get_state()}, {await state.get_data()}")
 
 
-@admin_router.message(Command('stop'))
+@admin_router.message(Command("stop"))
 async def stop_bot(message: Message):
     await message.reply(AdminHandlerMessages.STOPPING)
     await message.delete()

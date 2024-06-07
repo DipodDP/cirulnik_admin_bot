@@ -35,7 +35,9 @@ class DbConfig:
     port: int = 5432
 
     # For SQLAlchemy
-    def construct_sqlalchemy_url(self,  dialect="postgresql", driver="asyncpg", host=None, port=None) -> str:
+    def construct_sqlalchemy_url(
+        self, dialect="postgresql", driver="asyncpg", host=None, port=None
+    ) -> str:
         """
         Constructs and returns a SQLAlchemy URL for this database configuration.
         """
@@ -68,7 +70,13 @@ class DbConfig:
         port = env.int("DB_PORT", 5432)
         driver = env.str("DB_DRIVER", "asyncpg")
         return DbConfig(
-            host=host, password=password, user=user, database=database, port=port, dialect=dialect, driver=driver
+            host=host,
+            password=password,
+            user=user,
+            database=database,
+            port=port,
+            dialect=dialect,
+            driver=driver,
         )
 
 
@@ -98,7 +106,13 @@ class TgBot:
         #     env.list("ADMINS")
         # ))
         use_redis = env.bool("USE_REDIS")
-        return TgBot(token=token, admin_ids=admin_ids, proxy_url=proxy_url, use_redis=use_redis, console_log_level=console_log_level)
+        return TgBot(
+            token=token,
+            admin_ids=admin_ids,
+            proxy_url=proxy_url,
+            use_redis=use_redis,
+            console_log_level=console_log_level,
+        )
 
 
 @dataclass
@@ -166,6 +180,8 @@ class Miscellaneous:
         Creates the Miscellaneous object from environment variables.
         """
         locations_str: str = env.str("LOCATIONS")
+
+        locations_list = []
 
         if not locations_str:
             print("locations_str is empty")

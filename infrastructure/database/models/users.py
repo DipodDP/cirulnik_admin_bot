@@ -31,6 +31,7 @@ class User(Base, TimestampMixin, TableNameMixin):
         Inherits methods from Base, TimestampMixin, and TableNameMixin classes, which provide additional functionality.
 
     """
+
     user_id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=False)
     username: Mapped[Optional[str]] = mapped_column(String(128))
     full_name: Mapped[str] = mapped_column(String(128))

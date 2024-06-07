@@ -20,8 +20,8 @@ def user_menu_keyboard():
     return keyboard.as_markup(
         input_field_placeholder=f"Нажмите на кнопку {ReplyButtons.BTN_SEND_REPORT.value}",
         one_time_keyboard=True,
-        resize_keyboard=True
-        )
+        resize_keyboard=True,
+    )
 
 
 def nav_keyboard():

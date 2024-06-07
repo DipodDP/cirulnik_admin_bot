@@ -207,13 +207,13 @@ async def complete_report(message: types.Message, state: FSMContext, config: Con
         reply_markup=user_menu_keyboard(),
     )
 
-    if state_data['daytime'] == 'morning':
+    if state_data["daytime"] == "morning":
         report = ReportBuilder(state_data)
         text = report.construct_morning_report()
         media = report.build_album()
         await on_report(message.bot, config.tg_bot.admin_ids, text, media)
 
-    elif state_data['daytime'] == 'evening':
+    elif state_data["daytime"] == "evening":
         report = ReportBuilder(state_data)
         text = report.construct_evening_report()
         media = report.build_album()

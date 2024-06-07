@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from faker import Faker
 
 from infrastructure.database.repo.users import UserRepo
-    
+
 
 @dataclass
 class RequestsRepo:
@@ -27,7 +27,7 @@ class RequestsRepo:
 if __name__ == "__main__":
     import asyncio
 
-    from infrastructure.database.models import * 
+    from infrastructure.database.models import *
     from tgbot.config import load_config
     from infrastructure.database.setup import create_engine
     from infrastructure.database.setup import create_session_pool
@@ -63,6 +63,7 @@ if __name__ == "__main__":
                 username="johndoe",
             )
 
+        return user
 
     async def seed_fake_data():
         async with session_pool() as session:
@@ -73,19 +74,17 @@ if __name__ == "__main__":
 
         for _ in range(10):
             user = await repo.users.get_or_create_user(
-                    user_id=fake.pyint(),
-                    full_name=fake.name(),
-                    language=fake.language_code(),
-                    username=fake.user_name(),
-                    logged_as=fake.last_name()
-                )
+                user_id=fake.pyint(),
+                full_name=fake.name(),
+                language=fake.language_code(),
+                username=fake.user_name(),
+                logged_as=fake.last_name(),
+            )
             users.append(user)
-
 
     async def main():
         await example_usage()
         await seed_fake_data()
-
 
     try:
         asyncio.run(main())

@@ -9,7 +9,6 @@ from tgbot.handlers.report_morning import (
     enter_absent,
     enter_latecomers,
     enter_masters_quantity,
-    upload_open_reciept,
 )
 from tgbot.handlers.report_evening import (
     enter_clients_lost,
@@ -132,7 +131,7 @@ async def btn_back(message: types.Message, state: FSMContext, config: Config):
             await state.set_state(ReportMenuStates.entering_day_resume)
             await enter_day_resume(message, state)
             logger.debug(f"Back to state: {await state.get_state()}")
-        
+
         # Common states
         case "ReportMenuStates:uploading_solarium_counter":
             if state_data["daytime"] == "morning":

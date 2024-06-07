@@ -5,8 +5,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 class InlineButtons(str, Enum):
-    MORNING = '☀️ Утро'
-    EVENING = '🌙 Вечер'
+    MORNING = "☀️ Утро"
+    EVENING = "🌙 Вечер"
 
 
 # This is a simple keyboard, that contains 2 buttons
@@ -32,14 +32,11 @@ def daytime_keyboard():
     keyboard = InlineKeyboardBuilder()
 
     # You can use keyboard.button() method to add buttons, then enter text and callback_data
-    keyboard.button(
-        text=InlineButtons.MORNING,
-        callback_data="morning"
-    )
+    keyboard.button(text=InlineButtons.MORNING, callback_data="morning")
     keyboard.button(
         text=InlineButtons.EVENING,
         # In this simple example, we use a string as callback_data
-        callback_data="evening"
+        callback_data="evening",
     )
 
     # If needed you can use keyboard.adjust() method to change the number of buttons per row
@@ -61,6 +58,7 @@ class LocationCallbackData(CallbackData, prefix="location"):
 
     - In handlers you have to import this class and use it as a filter for callback query handlers, and then unpack callback_data parameter to get the data.
     """
+
     location_id: int
 
 
@@ -73,7 +71,7 @@ def locations_keyboard(locations: list):
             text=f"✂️ {location['title']}",
             # Here we use an instance of OrderCallbackData class as callback_data parameter
             # order id is the field in OrderCallbackData class, that we defined above
-            callback_data=LocationCallbackData(location_id=location["id"])
+            callback_data=LocationCallbackData(location_id=location["id"]),
         )
 
     keyboard.adjust(1)

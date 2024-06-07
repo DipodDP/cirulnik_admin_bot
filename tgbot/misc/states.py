@@ -15,10 +15,10 @@ class CommonStates(StatesGroup):
         :return: bool
         """
         state_data = await state.get_data()
-        if 'author' in state_data:
+        if "author" in state_data:
             await state.set_state(self.authorized)
             return True
-        else: 
+        else:
             await state.set_state(self.unauthorized)
             return False
 

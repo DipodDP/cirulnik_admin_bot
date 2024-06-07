@@ -28,6 +28,7 @@ class Location(Base, TimestampMixin, TableNameMixin):
         Inherits methods from Base, TimestampMixin, and TableNameMixin classes, which provide additional functionality.
 
     """
+
     location_id: Mapped[int] = mapped_column(INT, primary_key=True, autoincrement=False)
     location_name: Mapped[Optional[str]] = mapped_column(String(128))
     address: Mapped[str] = mapped_column(String(128))

@@ -8,7 +8,7 @@ from betterlogging import logging
 
 from infrastructure.database.models.users import User as UserFromDB
 
-from tgbot.handlers.user import user_auth, user_start
+from tgbot.handlers.user import user_start
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ async def non_auth_message(
     await state.update_data(author=user_from_db.username)
     await state.update_data(author_name=user_from_db.full_name)
     if isinstance(event, CallbackQuery):
-        if  event.message:
+        if event.message:
             message = Message(
                 message_id=event.message.message_id,
                 date=datetime.now(),

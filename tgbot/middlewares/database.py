@@ -17,19 +17,27 @@ class DatabaseMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         if not isinstance(event, Message | CallbackQuery):
-            print("%s used not for Message, but for %s", self.__class__.__name__, type(event))
+            print(
+                "%s used not for Message, but for %s",
+                self.__class__.__name__,
+                type(event),
+            )
             return await handler(event, data)
 
         async with self.session_pool() as session:
             repo = RequestsRepo(session)
             event_from_user = data.get("event_from_user")
 
-            user = await repo.users.get_or_create_user(
-                event_from_user.id,
-                event_from_user.full_name,
-                event_from_user.language_code,
-                event_from_user.username
-           ) if event_from_user is not None else None
+            user = (
+                await repo.users.get_or_create_user(
+                    event_from_user.id,
+                    event_from_user.full_name,
+                    event_from_user.language_code,
+                    event_from_user.username,
+                )
+                if event_from_user is not None
+                else None
+            )
 
             # access to session in handlers: repo.session.execute(stmt)
             data["repo"] = repo

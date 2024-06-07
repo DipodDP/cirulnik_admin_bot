@@ -11,7 +11,7 @@ def create_engine(db: DbConfig, echo=False):
         max_overflow=200,
         future=True,
         echo=echo,
-        pool_pre_ping=True
+        pool_pre_ping=True,
     )
     return engine
 

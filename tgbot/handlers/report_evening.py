@@ -68,7 +68,7 @@ async def enter_total_clients(message: types.Message, state: FSMContext):
     answer = await message.answer(
         ReportHandlerMessages.DAILY_EXCEL,
         reply_markup=excel_keyboard(),
-        parse_mode='Markdown'
+        parse_mode="Markdown",
     )
     await state.update_data(prev_bot_message=answer)
     logger.debug(f"{await state.get_state()}, {(await state.get_data())}")
@@ -78,7 +78,10 @@ async def enter_total_clients(message: types.Message, state: FSMContext):
     F.photo | F.text.in_(NavButtons.BTN_NEXT), ReportMenuStates.uploading_daily_excel
 )
 async def upload_daily_excel(
-    message: types.Message, state: FSMContext, config: Config, album: list[Message] | None = None
+    message: types.Message,
+    state: FSMContext,
+    config: Config,
+    album: list[Message] | None = None,
 ):
     state_data = await state.get_data()
     excel_photos: list = (
@@ -98,19 +101,31 @@ async def upload_daily_excel(
             except TelegramBadRequest as e:
                 logger.warning(e.message)
 
-        has_solarium = next((location['has_solarium'] for location in config.misc.locations_list if location['id'] == state_data['location_id']), None)
-        logger.debug(f"Location id: {state_data['location_id']}, has_solarium: {has_solarium}")
+        has_solarium = next(
+            (
+                location["has_solarium"]
+                for location in config.misc.locations_list
+                if location["id"] == state_data["location_id"]
+            ),
+            None,
+        )
+        logger.debug(
+            f"Location id: {state_data['location_id']}, has_solarium: {has_solarium}"
+        )
 
         if has_solarium:
             await state.set_state(ReportMenuStates.uploading_solarium_counter)
-            answer = await message.answer(ReportHandlerMessages.UPLOAD_SOLARIUM_COUNTER, reply_markup=nav_keyboard())
-        else: 
+            answer = await message.answer(
+                ReportHandlerMessages.UPLOAD_SOLARIUM_COUNTER,
+                reply_markup=nav_keyboard(),
+            )
+        else:
             await state.set_state(ReportMenuStates.uploading_z_report)
             answer = await message.answer(
                 ReportHandlerMessages.Z_REPORT, reply_markup=nav_keyboard()
             )
         await state.update_data(prev_bot_message=answer)
-        logger.debug(f'{await state.get_state()}, {await state.get_data()}')
+        logger.debug(f"{await state.get_state()}, {await state.get_data()}")
 
     else:
         for msg in album if album else [message]:

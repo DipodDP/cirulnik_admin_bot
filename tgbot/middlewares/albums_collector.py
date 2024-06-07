@@ -10,20 +10,21 @@ class AlbumsMiddleware(BaseMiddleware):
     def __init__(self, wait_time_seconds: int):
         super().__init__()
         self.wait_time_seconds = wait_time_seconds
-        self.albums_cache = TTLCache(
-            ttl=float(wait_time_seconds) + 20.0,
-            maxsize=1000
-        )
+        self.albums_cache = TTLCache(ttl=float(wait_time_seconds) + 20.0, maxsize=1000)
         self.lock = asyncio.Lock()
 
     async def __call__(
-            self,
-            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: Dict[str, Any],
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any],
     ) -> Any:
         if not isinstance(event, Message):
-            print("%s used not for Message, but for %s", self.__class__.__name__, type(event))
+            print(
+                "%s used not for Message, but for %s",
+                self.__class__.__name__,
+                type(event),
+            )
             return await handler(event, data)
 
         # If there is no media_group
@@ -57,6 +58,6 @@ class AlbumsMiddleware(BaseMiddleware):
         # add all other messages to data and pass to handler
         # context = data["context"]
         # context.album = self.albums_cache[album_id]
-        data['album'] = self.albums_cache[album_id]
+        data["album"] = self.albums_cache[album_id]
 
         return await handler(event, data)
