@@ -3,6 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from betterlogging import logging
+from infrastructure.database.repo.requests import RequestsRepo
 from tgbot.keyboards.reply import user_menu_keyboard
 
 from tgbot.messages.handlers_msg import UserHandlerMessages
@@ -73,13 +74,19 @@ async def help(message: Message, state: FSMContext):
 
 
 @user_router.message(CommonStates.unauthorized)
-async def user_auth(message: Message, state: FSMContext):
+async def user_auth(message: Message, state: FSMContext, repo: RequestsRepo):
     await message.delete()
     await delete_prev_message(state)
 
-    # Saving user info to state
+    # Saving user info to DB
     if user := message.from_user:
-        author = (user.username if user.username else "N/A",)
+        author = user.username if user.username else "N/A"
+        # await repo.users.get_or_create_user(
+        #     user_id=message.from_user.id,
+        #     username=message.from_user.username,
+        #     language=message.from_user.language_code,
+        #     logged_as=message.text,
+        # )
         answer = await message.answer(
             UserHandlerMessages.GREETINGS.format(user=message.text),
             reply_markup=user_menu_keyboard(),

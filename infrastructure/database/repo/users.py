@@ -32,12 +32,12 @@ class UserRepo(BaseRepo):
                     username=username,
                     full_name=full_name,
                     language=language,
-                    logged_as=logged_as,
+                    # logged_as=logged_as,
                 )
                 .on_conflict_do_update(
                     index_elements=[User.user_id],
                     set_=dict(
-                        username=username, full_name=full_name, logged_as=logged_as
+                        username=username, full_name=full_name, language=language
                     ),
                 )
                 .returning(User)
@@ -45,7 +45,8 @@ class UserRepo(BaseRepo):
 
             result = await self.session.execute(insert_stmt)
 
-        except Exception:
+        except Exception as e:
+            print(e)
             insert_stmt = (
                 my_insert(User)
                 .values(
@@ -53,10 +54,10 @@ class UserRepo(BaseRepo):
                     username=username,
                     full_name=full_name,
                     language=language,
-                    logged_as=logged_as,
+                    # logged_as=logged_as,
                 )
                 .on_duplicate_key_update(
-                    username=username, full_name=full_name, logged_as=logged_as
+                    username=username, full_name=full_name, language=language
                 )
             )
 
@@ -69,11 +70,7 @@ class UserRepo(BaseRepo):
 
         await self.session.commit()
         scalar = result.scalar_one()
-        # print(
-        #     '\n____Result_content____\n',
-        #     scalar := result.scalar_one(),
-        #     '\n______________________\n',
-        # )
+
         return scalar
 
     async def get_user_by_id(self, telegram_id: int):
