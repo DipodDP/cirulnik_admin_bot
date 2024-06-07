@@ -12,7 +12,6 @@ async def delete_prev_message(state: FSMContext):
     if 'prev_bot_message' in user_data:
         try:
             prev_bot_message: Message = user_data['prev_bot_message']
-            logger.debug(prev_bot_message.message_id)
             await prev_bot_message.delete()
         except (TelegramAPIError) as e:
             logger.exception(e.message)
