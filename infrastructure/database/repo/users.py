@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
 
@@ -11,10 +11,10 @@ class UserRepo(BaseRepo):
     async def get_or_create_user(
         self,
         user_id: int,
-        full_name: Optional[str] = None,
-        language: Optional[str] = None,
         username: Optional[str] = None,
-        logged_as: Optional[str] = None,
+        full_name: Optional[str] = None,
+        language: str = 'en',
+        # logged_as: Optional[str] = None,
     ):
         """
         Creates or updates a new user in the database and returns the user object.
@@ -32,12 +32,12 @@ class UserRepo(BaseRepo):
                     username=username,
                     full_name=full_name,
                     language=language,
-                    logged_as=logged_as,
+                    # logged_as=logged_as,
                 )
                 .on_conflict_do_update(
                     index_elements=[User.user_id],
                     set_=dict(
-                        username=username, full_name=full_name, logged_as=logged_as
+                        username=username, full_name=full_name
                     ),
                 )
                 .returning(User)
@@ -45,7 +45,8 @@ class UserRepo(BaseRepo):
 
             result = await self.session.execute(insert_stmt)
 
-        except Exception:
+        except Exception as e:
+            print(e)
             insert_stmt = (
                 my_insert(User)
                 .values(
@@ -53,10 +54,10 @@ class UserRepo(BaseRepo):
                     username=username,
                     full_name=full_name,
                     language=language,
-                    logged_as=logged_as,
+                    # logged_as=logged_as,
                 )
                 .on_duplicate_key_update(
-                    username=username, full_name=full_name, logged_as=logged_as
+                    username=username, full_name=full_name
                 )
             )
 
@@ -69,12 +70,14 @@ class UserRepo(BaseRepo):
 
         await self.session.commit()
         scalar = result.scalar_one()
-        # print(
-        #     '\n____Result_content____\n',
-        #     scalar := result.scalar_one(),
-        #     '\n______________________\n',
-        # )
         return scalar
+
+    async def set_user_logged_as(self, telegram_id: int, logged_as: str | None):
+        insert_stmt = update(User).where(User.user_id == telegram_id).values(logged_as = logged_as)
+        result = await self.session.execute(insert_stmt)
+        await self.session.commit()
+
+        return result.last_updated_params()
 
     async def get_user_by_id(self, telegram_id: int):
         select_stmt = select(User).where(User.user_id == telegram_id)

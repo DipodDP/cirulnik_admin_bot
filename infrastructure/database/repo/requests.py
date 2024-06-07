@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 from faker import Faker
 
+from infrastructure.database.models.base import Base
 from infrastructure.database.repo.users import UserRepo
 
 
@@ -78,7 +79,6 @@ if __name__ == "__main__":
                 full_name=fake.name(),
                 language=fake.language_code(),
                 username=fake.user_name(),
-                logged_as=fake.last_name(),
             )
             users.append(user)
 
