@@ -1,17 +1,22 @@
 import asyncio
 import logging
-from aiogram.client.session.aiohttp import AiohttpSession
+
 import betterlogging as bl
-from aiogram import Bot, Dispatcher, session
+from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.memory import MemoryStorage
+
+from infrastructure.database.models import *
+from infrastructure.database.setup import create_engine, create_session_pool
+
+# from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
+from tgbot.config import Config, load_config
+from tgbot.handlers import routers_list
 from tgbot.middlewares.albums_collector import AlbumsMiddleware
+from tgbot.middlewares.config import ConfigMiddleware
+from tgbot.middlewares.database import DatabaseMiddleware
 from tgbot.misc.notify_admins import on_down, on_startup
 from tgbot.misc.setting_comands import set_all_default_commands
-# from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
-
-from tgbot.config import load_config, Config
-from tgbot.handlers import routers_list
-from tgbot.middlewares.config import ConfigMiddleware
 
 
 def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=None):
@@ -27,8 +32,8 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=Non
     """
     middleware_types = [
         ConfigMiddleware(config),
-        AlbumsMiddleware(2)
-        # DatabaseMiddleware(session_pool),
+        AlbumsMiddleware(2),
+        DatabaseMiddleware(session_pool) if session_pool else None,
     ]
 
     for middleware_type in middleware_types:
@@ -94,13 +99,20 @@ async def main():
 
     # Proxy URL with credentials:
     # "protocol://user:password@host:port"
-    session = AiohttpSession(config.tg_bot.proxy_url) if config.tg_bot.proxy_url else None
-    bot = Bot(token=config.tg_bot.token, parse_mode="HTML", session=session)
+    session = (
+        AiohttpSession(config.tg_bot.proxy_url) if config.tg_bot.proxy_url else None
+    )
+    bot = Bot(token=config.tg_bot.token, session=session)
     dp = Dispatcher(storage=storage)
 
     dp.include_routers(*routers_list)
 
-    register_global_middlewares(dp, config)
+    session_pool = None
+    if config.db:
+        engine = create_engine(config.db, echo=True)
+        session_pool = create_session_pool(engine)
+
+    register_global_middlewares(dp, config, session_pool)
     await set_all_default_commands(bot)
 
     try:

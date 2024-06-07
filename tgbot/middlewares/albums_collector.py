@@ -26,8 +26,6 @@ class AlbumsMiddleware(BaseMiddleware):
             print("%s used not for Message, but for %s", self.__class__.__name__, type(event))
             return await handler(event, data)
 
-        event: Message
-
         # If there is no media_group
         # just pass update further
         if event.media_group_id is None:
