@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Any, Awaitable
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message, TelegramObject
+from aiogram.types import CallbackQuery, Message, TelegramObject
 
 from infrastructure.database.repo.requests import RequestsRepo
 
@@ -16,7 +16,7 @@ class DatabaseMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        if not isinstance(event, Message):
+        if not isinstance(event, Message | CallbackQuery):
             print("%s used not for Message, but for %s", self.__class__.__name__, type(event))
             return await handler(event, data)
 

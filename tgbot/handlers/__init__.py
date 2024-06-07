@@ -9,13 +9,13 @@ from .report_nav_buttons import report_nav_buttons_router
 from .user import user_router
 
 routers_list = [
+    auth_router,
     admin_router,
     user_router,
     report_nav_buttons_router,
     report_menu_router,
     report_morning_router,
     report_evening_router,
-    auth_router,
     echo_router,  # echo_router must be last
 ]
 

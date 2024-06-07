@@ -1,12 +1,14 @@
-from aiogram import types, Router
+from datetime import datetime
+from aiogram import Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.types.callback_query import CallbackQuery
+from aiogram.types.message import Message
 from betterlogging import logging
 
-from infrastructure.database.models.users import User  as UserFromDB
+from infrastructure.database.models.users import User as UserFromDB
 
-# from infrastructure.database.repo.requests import RequestsRepo
-from tgbot.handlers.user import user_auth
+from tgbot.handlers.user import user_auth, user_start
 
 
 logger = logging.getLogger(__name__)
@@ -15,16 +17,31 @@ auth_router = Router()
 
 
 @auth_router.message(StateFilter(None))
-async def reset_auth(
-    message: types.Message,
+@auth_router.callback_query(StateFilter(None))
+async def non_auth_message(
+    event: Message | CallbackQuery,
     state: FSMContext,
-    # repo: RequestsRepo,
-    user_from_db: UserFromDB
-,
+    user_from_db: UserFromDB,
 ):
-    # await message.delete()
-    if message.from_user:
-        logger.info(f'User from DB: { user_from_db }')
+    if event.from_user:
+        logger.info(f"User from DB: { user_from_db }")
     await state.update_data(author=user_from_db.username)
     await state.update_data(author_name=user_from_db.full_name)
-    await user_auth(message, state)
+    if isinstance(event, CallbackQuery):
+        if  event.message:
+            message = Message(
+                message_id=event.message.message_id,
+                date=datetime.now(),
+                chat=event.message.chat,
+                text=user_from_db.logged_as,
+            ).as_(event.bot)
+        else:
+            message = None
+    else:
+        message = Message(
+            message_id=event.message_id,
+            date=datetime.now(),
+            chat=event.chat,
+            text=user_from_db.logged_as,
+        ).as_(event.bot)
+    await user_start(message, state)
