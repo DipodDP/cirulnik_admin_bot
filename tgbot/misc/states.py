@@ -15,7 +15,12 @@ class CommonStates(StatesGroup):
         :return: bool
         """
         state_data = await state.get_data()
-        if "author"in state_data and "author_name" in state_data:
+        if all(
+            [
+                state_data.get("author") is not None,
+                state_data.get("author_name") is not None,
+            ]
+        ):
             await state.set_state(self.authorized)
             return True
         else:

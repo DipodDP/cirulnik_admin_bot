@@ -21,6 +21,9 @@ async def user_start(message: Message, state: FSMContext):
     await message.delete() if message is not None else ...
     await delete_prev_message(state)
 
+    if message.text == "/start":
+        await state.update_data(author_name=None)
+
     state_data = await state.get_data()
     location_message: Message | None = state_data.get("location_message")
     if location_message:

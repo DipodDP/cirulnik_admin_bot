@@ -26,10 +26,8 @@ async def non_auth_message(
     if event.from_user:
         logger.info(f"User from DB: { user_from_db }")
 
-    if author := user_from_db.username:
-        await state.update_data(author=author)
-    if author_name := user_from_db.logged_as:
-        await state.update_data(author_name=author_name)
+    await state.update_data(author=user_from_db.username)
+    await state.update_data(author_name=user_from_db.logged_as)
     if isinstance(event, CallbackQuery):
         if event.message:
             message = Message(

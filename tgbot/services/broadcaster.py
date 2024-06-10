@@ -46,7 +46,7 @@ async def send_message(
                 disable_notification=disable_notification,
             )
     except exceptions.TelegramBadRequest as e:
-        logging.error("Telegram server says - Bad Request: chat not found")
+        logging.error(f"Telegram server says - {e}")
     except exceptions.TelegramForbiddenError:
         logging.error(f"Target [ID:{user_id}]: got TelegramForbiddenError")
     except exceptions.TelegramRetryAfter as e:

@@ -1,7 +1,7 @@
 from aiogram import Router
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, InaccessibleMessage, Message
 from betterlogging import logging
 
 from tgbot.filters.admin import AdminFilter
@@ -15,22 +15,30 @@ logger = logging.getLogger(__name__)
 
 admin_router = Router()
 admin_router.message.filter(AdminFilter())
+admin_router.callback_query.filter(AdminFilter())
 
 
 @admin_router.message(CommandStart())
-async def admin_start(message: Message, state: FSMContext):
-    await message.delete()
+@admin_router.message(StateFilter(None))
+@admin_router.callback_query(StateFilter(None))
+async def admin_start(event: Message | CallbackQuery, state: FSMContext):
+    if isinstance(event, Message):
+        message = event
+    else:
+        message = event.message
     await delete_prev_message(state)
 
     await state.set_state(CommonStates.authorized)
     await state.update_data(
-        author=message.from_user.username, author_name=message.from_user.full_name
-    ) if message.from_user else ...
+        author=event.from_user.username, author_name=event.from_user.full_name
+    ) if event.from_user else ...
 
-    answer = await message.answer(
-        AdminHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard()
-    )
-    await state.update_data(prev_bot_message=answer)
+    if message and not isinstance(message, InaccessibleMessage):
+        await message.delete()
+        answer = await message.answer(
+            AdminHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard()
+        )
+        await state.update_data(prev_bot_message=answer)
     logger.debug(f"{await state.get_state()}, {await state.get_data()}")
 
 
