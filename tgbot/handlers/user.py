@@ -3,6 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from betterlogging import logging
+from infrastructure.database.repo.requests import RequestsRepo
 from tgbot.keyboards.reply import user_menu_keyboard
 
 from tgbot.messages.handlers_msg import UserHandlerMessages
@@ -20,17 +21,22 @@ async def user_start(message: Message, state: FSMContext):
     await message.delete() if message is not None else ...
     await delete_prev_message(state)
 
+    if message.text == "/start":
+        await state.update_data(author_name=None)
+
     state_data = await state.get_data()
     location_message: Message | None = state_data.get("location_message")
     if location_message:
         await location_message.delete()
 
     if auth := await CommonStates().check_auth(state):
+        logger.info(f'Auth for {state_data.get("author_name")} has been passed')
         answer = await message.answer(
             UserHandlerMessages.GREETINGS.format(user=state_data["author_name"]),
             reply_markup=user_menu_keyboard(),
         )
     else:
+        logger.info(f'Auth for {state_data.get("author_name")} has been rejected')
         # Checking if user has username
         if user := message.from_user:
             if user.username:
@@ -52,7 +58,7 @@ async def user_start(message: Message, state: FSMContext):
     logger.info(
         " ".join(
             [
-                f'Logged user: @{state_data["author"] if "author" in state_data else None}',
+                f'Logged user: @{state_data.get("author")}',
                 f"{message.from_user.username if message.from_user else None}",
                 f"authorized: {auth}",
             ]
@@ -73,23 +79,27 @@ async def help(message: Message, state: FSMContext):
 
 
 @user_router.message(CommonStates.unauthorized)
-async def user_auth(message: Message, state: FSMContext):
+async def user_auth(message: Message, state: FSMContext, repo: RequestsRepo):
     await message.delete()
     await delete_prev_message(state)
 
-    # Saving user info to state
+    # Saving user info to DB
     if user := message.from_user:
-        author = (user.username if user.username else "N/A",)
+        author = user.username if user.username else "N/A"
         answer = await message.answer(
             UserHandlerMessages.GREETINGS.format(user=message.text),
             reply_markup=user_menu_keyboard(),
         )
         await state.update_data(prev_bot_message=answer)
+        await state.update_data(author_name=message.text)
+
+        user_id = message.from_user.id
+        result = await repo.users.set_user_logged_as(user_id, message.text)
+        logger.info(f"Update in users table: {result}")
 
     else:
         author = None
 
     await state.update_data(author=author)
-    await state.update_data(author_name=message.text)
     await state.set_state(CommonStates.authorized)
     logger.info(f"Logged user: @{author} as {message.text}")

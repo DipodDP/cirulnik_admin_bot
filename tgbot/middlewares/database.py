@@ -31,9 +31,9 @@ class DatabaseMiddleware(BaseMiddleware):
             user = (
                 await repo.users.get_or_create_user(
                     event_from_user.id,
+                    event_from_user.username,
                     event_from_user.full_name,
                     event_from_user.language_code,
-                    event_from_user.username,
                 )
                 if event_from_user is not None
                 else None

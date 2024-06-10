@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 from faker import Faker
 
+from infrastructure.database.models.base import Base
 from infrastructure.database.repo.users import UserRepo
 
 
@@ -48,12 +49,12 @@ if __name__ == "__main__":
         async with session_pool() as session:
             repo = RequestsRepo(session)
             # Base.metadata.drop_all(engine)
-            async with engine.begin() as conn:
-                # Use run_sync to execute the CreateTable operation
-                await conn.run_sync(Base.metadata.drop_all)
-            async with engine.begin() as conn:
-                # Use run_sync to execute the CreateTable operation
-                await conn.run_sync(Base.metadata.create_all)
+            # async with engine.begin() as conn:
+            #     # Use run_sync to execute the CreateTable operation
+            #     await conn.run_sync(Base.metadata.drop_all)
+            # async with engine.begin() as conn:
+            #     # Use run_sync to execute the CreateTable operation
+            #     await conn.run_sync(Base.metadata.create_all)
 
             # Replace user details with the actual values
             user = await repo.users.get_or_create_user(
@@ -61,6 +62,7 @@ if __name__ == "__main__":
                 full_name="John Doe",
                 language="en",
                 username="johndoe",
+                # logged_as="Noname"
             )
 
         return user
@@ -75,10 +77,9 @@ if __name__ == "__main__":
         for _ in range(10):
             user = await repo.users.get_or_create_user(
                 user_id=fake.pyint(),
+                username=fake.user_name(),
                 full_name=fake.name(),
                 language=fake.language_code(),
-                username=fake.user_name(),
-                logged_as=fake.last_name(),
             )
             users.append(user)
 
