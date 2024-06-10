@@ -83,9 +83,9 @@ async def user_auth(message: Message, state: FSMContext, repo: RequestsRepo):
     await message.delete()
     await delete_prev_message(state)
 
-    # Saving user info to state
+    # Saving user info to DB
     if user := message.from_user:
-        author = (user.username if user.username else "N/A",)
+        author = user.username if user.username else "N/A"
         answer = await message.answer(
             UserHandlerMessages.GREETINGS.format(user=message.text),
             reply_markup=user_menu_keyboard(),

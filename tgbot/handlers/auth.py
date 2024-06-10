@@ -6,7 +6,7 @@ from aiogram.types.callback_query import CallbackQuery
 from aiogram.types.message import Message
 from betterlogging import logging
 
-from infrastructure.database.models.users import User as UserFromDB
+from infrastructure.database.models.users import User
 
 from tgbot.handlers.user import user_start
 
@@ -21,7 +21,7 @@ auth_router = Router()
 async def non_auth_message(
     event: Message | CallbackQuery,
     state: FSMContext,
-    user_from_db: UserFromDB,
+    user_from_db: User,
 ):
     if event.from_user:
         logger.info(f"User from DB: { user_from_db }")
@@ -35,6 +35,7 @@ async def non_auth_message(
                 date=datetime.now(),
                 chat=event.message.chat,
                 text=user_from_db.logged_as,
+                from_user=event.from_user
             ).as_(event.bot)
         else:
             message = None

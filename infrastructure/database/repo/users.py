@@ -37,7 +37,7 @@ class UserRepo(BaseRepo):
                 .on_conflict_do_update(
                     index_elements=[User.user_id],
                     set_=dict(
-                        username=username, full_name=full_name
+                        username=username, full_name=full_name, language=language
                     ),
                 )
                 .returning(User)
@@ -57,7 +57,7 @@ class UserRepo(BaseRepo):
                     # logged_as=logged_as,
                 )
                 .on_duplicate_key_update(
-                    username=username, full_name=full_name
+                    username=username, full_name=full_name, language=language
                 )
             )
 
@@ -70,6 +70,7 @@ class UserRepo(BaseRepo):
 
         await self.session.commit()
         scalar = result.scalar_one()
+
         return scalar
 
     async def set_user_logged_as(self, telegram_id: int, logged_as: str | None):
