@@ -4,8 +4,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.formatting import as_section, as_key_value, as_marked_list
 from betterlogging import logging
+from infrastructure.database.models.users import User
 from tgbot.config import Config
 
+from tgbot.handlers.user import user_start
 from tgbot.keyboards.inline import (
     daytime_keyboard,
     locations_keyboard,
@@ -36,14 +38,20 @@ report_menu_router = Router()
 @report_menu_router.message(
     F.text == ReplyButtons.BTN_SEND_REPORT, CommonStates.authorized
 )
-async def choose_daytime(message: Message, state: FSMContext):
-    await message.delete()
-    await delete_prev_message(state)
-    answer = await message.answer(
-        ReportHandlerMessages.CHOOSE_DAYTIME, reply_markup=daytime_keyboard()
-    )
-    await state.set_state(ReportMenuStates.creating_report)
-    await state.update_data(prev_bot_message=answer)
+async def choose_daytime(message: Message, state: FSMContext, user_from_db: User):
+    if user_from_db.username:
+        await message.delete()
+        await delete_prev_message(state)
+        answer = await message.answer(
+            ReportHandlerMessages.CHOOSE_DAYTIME, reply_markup=daytime_keyboard()
+        )
+        await state.set_state(ReportMenuStates.creating_report)
+        await state.update_data(prev_bot_message=answer)
+
+    else:
+        await state.set_state(CommonStates.unauthorized)
+        await user_start(message, state)
+
     logger.debug(f"{await state.get_state()}, {await state.get_data()}")
 
 

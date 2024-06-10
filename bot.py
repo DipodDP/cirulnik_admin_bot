@@ -122,8 +122,7 @@ async def main():
 
     except Exception as e:
         logging.exception(e)
-        # await dp.stop_polling()
-        ...
+
     finally:
         await on_down(bot, config.tg_bot.admin_ids)
         await bot.session.close()
