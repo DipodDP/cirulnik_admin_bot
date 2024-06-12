@@ -17,5 +17,6 @@ def create_engine(db: DbConfig, echo=False):
 
 
 def create_session_pool(engine):
+    # Session won't be expiring on commit
     session_pool = async_sessionmaker(bind=engine, expire_on_commit=False)
     return session_pool

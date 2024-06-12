@@ -1,29 +1,23 @@
 from typing import Annotated, Optional
 
-from sqlalchemy import INTEGER, ForeignKey, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy import text, BIGINT, Boolean, true
-from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
 
-from .base import Base, TimestampMixin, TableNameMixin
+from infrastructure.database.models.locations import Location
+
+from .base import Base, TimestampMixin, TableNameMixin, str_128
 
 # Users ForeignKey
 user_fk = Annotated[
     int, mapped_column(BIGINT, ForeignKey("users.user_id", ondelete="CASCADE"))
 ]
 
-# integer primary key
-int_pk = Annotated[int, mapped_column(INTEGER, primary_key=True)]
-
-# string column with length 128
-str_128 = Annotated[str, mapped_column(String(128))]
-
 
 class User(Base, TimestampMixin, TableNameMixin):
     """
-    This class represents a User in the application.
-    If you want to learn more about SQLAlchemy and Alembic, you can check out the following link to my course:
-    https://www.udemy.com/course/sqlalchemy-alembic-bootcamp/?referralCode=E9099C5B5109EB747126
+    Represents a User in the application.
 
     Attributes:
         user_id (Mapped[int]): The unique identifier of the user.
@@ -48,7 +42,9 @@ class User(Base, TimestampMixin, TableNameMixin):
     full_name: Mapped[str_128]
     language: Mapped[str] = mapped_column(String(10), server_default=text("'en'"))
     active: Mapped[bool] = mapped_column(Boolean, server_default=true())
-    logged_as:Mapped[Optional[str_128]] 
+    logged_as: Mapped[Optional[str_128]]
+
+    locations: Mapped[Optional[list['Location']]] = relationship()
 
     def __repr__(self):
         return f"<User {self.user_id} {self.username} {self.full_name}>"

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 from faker import Faker
 
-from infrastructure.database.models.base import Base
+# from infrastructure.database.models.base import Base
 from infrastructure.database.repo.users import UserRepo
 
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
             #     await conn.run_sync(Base.metadata.create_all)
 
             # Replace user details with the actual values
-            user = await repo.users.get_or_create_user(
+            user = await repo.users.get_or_upsert_user(
                 user_id=12356,
                 full_name="John Doe",
                 language="en",
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         users = []
 
         for _ in range(10):
-            user = await repo.users.get_or_create_user(
+            user = await repo.users.get_or_upsert_user(
                 user_id=fake.pyint(),
                 username=fake.user_name(),
                 full_name=fake.name(),

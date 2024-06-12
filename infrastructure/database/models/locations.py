@@ -1,20 +1,17 @@
-from typing import Optional
-
-from sqlalchemy import String
-from sqlalchemy import INT, Boolean, true
-from sqlalchemy.orm import Mapped
+from sqlalchemy import Boolean, ForeignKey, Integer, true
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
 
-from .base import Base, TimestampMixin, TableNameMixin
+from .base import Base, TimestampMixin, TableNameMixin, int_pk, str_128
 
 
 class Location(Base, TimestampMixin, TableNameMixin):
     """
-    This class represents a location in the application.
+    Represents a location in the application.
 
     Attributes:
         location_id (Mapped[int]): The unique identifier of the location.
-        location_name (Mapped[Optional[str]]): The location_name of the location.
+        location_name (Mapped[str]): The location_name of the location.
         address (Mapped[str]): The full addresss of the location.
         has_solarium (Mapped[bool]): Indicates whether the location has_solarium or not.
 
@@ -29,10 +26,43 @@ class Location(Base, TimestampMixin, TableNameMixin):
 
     """
 
-    location_id: Mapped[int] = mapped_column(INT, primary_key=True, autoincrement=False)
-    location_name: Mapped[Optional[str]] = mapped_column(String(128))
-    address: Mapped[str] = mapped_column(String(128))
+    location_id: Mapped[int_pk]
+    location_name: Mapped[str_128]
+    address: Mapped[str_128]
     has_solarium: Mapped[bool] = mapped_column(Boolean, server_default=true())
 
     def __repr__(self):
         return f"<Location {self.location_id} {self.location_name} {self.address}>"
+
+
+class UserLocation(Base, TableNameMixin):
+    """
+    Represents a Association Table for Many-to-Many relationship between roles and locations.
+
+    Attributes:
+        location_id (Mapped[int]): The unique identifier of the location.
+        user_id (Mapped[int])
+
+    Methods:
+        __repr__(): Returns a string representation of the object.
+
+    Inherited Attributes:
+        Inherits from Base and TableNameMixin classes, which provide additional attributes and functionality.
+
+    """
+
+    location_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("location.location_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    location: Mapped["Location"] = relationship()
+
+    def __repr__(self):
+        return f"<UserLocation user_id={self.user_id} location_id={self.location_id}>"

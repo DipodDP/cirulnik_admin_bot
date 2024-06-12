@@ -18,9 +18,9 @@ class DatabaseMiddleware(BaseMiddleware):
     ) -> Any:
         if not isinstance(event, Message | CallbackQuery):
             print(
-                "%s used not for Message, but for %s",
-                self.__class__.__name__,
-                type(event),
+                "{} used not for Message, but for {}".format(
+                    self.__class__.__name__, type(event).__name__
+                ),
             )
             return await handler(event, data)
 
@@ -29,7 +29,7 @@ class DatabaseMiddleware(BaseMiddleware):
             event_from_user = data.get("event_from_user")
 
             user = (
-                await repo.users.get_or_create_user(
+                await repo.users.get_or_upsert_user(
                     event_from_user.id,
                     event_from_user.username,
                     event_from_user.full_name,

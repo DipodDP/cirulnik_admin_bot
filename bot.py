@@ -90,8 +90,9 @@ def get_storage(config):
 
 async def main():
     config = load_config(".env")
+    log_level = config.tg_bot.console_log_level
 
-    setup_logging(config.tg_bot.console_log_level)
+    setup_logging(log_level)
     logger = logging.getLogger(__name__)
     logger.debug(config)
 
@@ -109,7 +110,10 @@ async def main():
 
     session_pool = None
     if config.db:
-        engine = create_engine(config.db, echo=True)
+        engine = create_engine(
+                config.db,
+                echo=(log_level == 'DEBUG')
+        )
         session_pool = create_session_pool(engine)
 
     register_global_middlewares(dp, config, session_pool)

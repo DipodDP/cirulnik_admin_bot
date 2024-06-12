@@ -8,10 +8,10 @@ from infrastructure.database.repo.base import BaseRepo
 
 
 class LocationRepo(BaseRepo):
-    async def get_or_create_location(
+    async def get_or_upsert_location(
         self,
         location_id: int,
-        locationname: Optional[str] = None,
+        location_name: Optional[str] = None,
         full_name: Optional[str] = None,
         language: str = 'en',
         # logged_as: Optional[str] = None,
@@ -21,57 +21,53 @@ class LocationRepo(BaseRepo):
         :param location_id: The location's ID.
         :param full_name: The location's full name.
         :param language: The location's language.
-        :param locationname: The location's locationname. It's an optional parameter.
+        :param location_name: The location's location_name. It's an optional parameter.
         :return: Location object, None if there was an error while making a transaction.
         """
-        try:
+
+        # Determine the dialect name
+        dialect_name = self.session.bind.dialect.name
+
+        # Common values to insert
+        values = {
+            "location_id": location_id,
+            "location_name": location_name,
+            "full_name": full_name,
+            "language": language,
+        }
+
+        if dialect_name == "postgresql":
+            # PostgreSQL upsert statement
             insert_stmt = (
                 pg_insert(Location)
-                .values(
-                    location_id=location_id,
-                    locationname=locationname,
-                    full_name=full_name,
-                    language=language,
-                    # logged_as=logged_as,
-                )
-                .on_conflict_do_update(
-                    index_elements=[Location.location_id],
-                    set_=dict(
-                        locationname=locationname, full_name=full_name, language=language
-                    ),
-                )
+                .values(**values)
+                .on_conflict_do_update(index_elements=[Location.location_id], set_=values)
                 .returning(Location)
             )
 
             result = await self.session.execute(insert_stmt)
+            inserted_location = result.scalar_one()
 
-        except Exception as e:
-            print(e)
+        elif dialect_name == "mysql":
+            # MySQL upsert statement
             insert_stmt = (
-                my_insert(Location)
-                .values(
-                    location_id=location_id,
-                    locationname=locationname,
-                    full_name=full_name,
-                    language=language,
-                    # logged_as=logged_as,
-                )
-                .on_duplicate_key_update(
-                    locationname=locationname, full_name=full_name, language=language
-                )
+                my_insert(Location).values(**values).on_duplicate_key_update(**values)
             )
 
             await self.session.execute(insert_stmt)
-            # Flush the session to ensure the insert/update operation is executed
+            # Flush the self.session to ensure the insert/update operation is executed
             await self.session.flush()
             # Query the location after insertion/updation
             location_query = select(Location).where(Location.location_id == location_id)
             result = await self.session.execute(location_query)
+            inserted_location = result.scalar_one()
+
+        else:
+            raise ValueError(f"Unsupported database dialect: {dialect_name}")
 
         await self.session.commit()
-        scalar = result.scalar_one()
+        return inserted_location
 
-        return scalar
 
     async def set_location_logged_as(self, telegram_id: int, logged_as: str | None):
         insert_stmt = update(Location).where(Location.location_id == telegram_id).values(logged_as = logged_as)

@@ -21,9 +21,9 @@ class AlbumsMiddleware(BaseMiddleware):
     ) -> Any:
         if not isinstance(event, Message):
             print(
-                "%s used not for Message, but for %s",
-                self.__class__.__name__,
-                type(event),
+                "{} used not for Message, but for {}".format(
+                    self.__class__.__name__, type(event).__name__
+                ),
             )
             return await handler(event, data)
 

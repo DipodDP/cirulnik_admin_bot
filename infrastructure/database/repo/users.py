@@ -8,7 +8,7 @@ from infrastructure.database.repo.base import BaseRepo
 
 
 class UserRepo(BaseRepo):
-    async def get_or_create_user(
+    async def get_or_upsert_user(
         self,
         user_id: int,
         username: Optional[str] = None,
