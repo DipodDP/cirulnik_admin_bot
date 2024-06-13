@@ -1,11 +1,11 @@
 from typing import Optional
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import String
 from sqlalchemy import text, BIGINT, Boolean, true
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
 
-from infrastructure.database.models.locations import Location
+from infrastructure.database.models.locations import UserLocation
 
 from .base import Base, TimestampMixin, TableNameMixin, str_128
 
@@ -35,11 +35,11 @@ class User(Base, TimestampMixin, TableNameMixin):
     user_id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=False)
     username: Mapped[Optional[str_128]]
     full_name: Mapped[str_128]
-    language: Mapped[str] = mapped_column(String(10), server_default=text("'en'"))
+    language: Mapped[str] = mapped_column(String(10), server_default=text("en"))
     active: Mapped[bool] = mapped_column(Boolean, server_default=true())
     logged_as: Mapped[Optional[str_128]]
 
-    locations: Mapped[list['Location']] = relationship("Location", back_populates="user")
+    locations: Mapped[list['UserLocation']] = relationship()
 
     def __repr__(self):
         return f"<User {self.user_id} {self.username} {self.full_name}>"

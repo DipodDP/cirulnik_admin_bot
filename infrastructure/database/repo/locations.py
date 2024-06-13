@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
 
@@ -36,7 +36,7 @@ class LocationRepo(BaseRepo):
         }
 
         if location_id:
-            values['location_id'] = location_id
+            values["location_id"] = location_id
 
         if dialect_name == "postgresql":
             # PostgreSQL upsert statement
@@ -61,8 +61,19 @@ class LocationRepo(BaseRepo):
             await self.session.execute(insert_stmt)
             # Flush the self.session to ensure the insert/update operation is executed
             await self.session.flush()
-            # Query the location after insertion/updation
-            location_query = select(Location).where(Location.location_id == location_id)
+
+            # Retrieve the last inserted ID using a raw SQL query
+            last_insert_id_query = text("SELECT LAST_INSERT_ID()")
+            result = await self.session.execute(last_insert_id_query)
+            last_id = result.scalar_one()
+
+            if not last_id:
+                location_query = select(Location).where(Location.location_name == values['location_name'])
+
+            else:
+                # Query the location after insertion/updation
+                location_query = select(Location).where(Location.location_id == last_id)
+
             result = await self.session.execute(location_query)
             inserted_location = result.scalar_one()
 
