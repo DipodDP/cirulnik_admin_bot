@@ -1,8 +1,9 @@
-from sqlalchemy import Boolean, ForeignKey, Integer, true
+from typing import Optional
+from sqlalchemy import Boolean, ForeignKey, Integer, String, true
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
 
-from .base import Base, TimestampMixin, TableNameMixin, int_pk, str_128
+from .base import Base, TimestampMixin, TableNameMixin, user_fk, int_pk, str_128
 
 
 class Location(Base, TimestampMixin, TableNameMixin):
@@ -27,9 +28,14 @@ class Location(Base, TimestampMixin, TableNameMixin):
     """
 
     location_id: Mapped[int_pk]
-    location_name: Mapped[str_128]
+    location_name: Mapped[str] = mapped_column(String(128), unique=True)
     address: Mapped[str_128]
     has_solarium: Mapped[bool] = mapped_column(Boolean, server_default=true())
+
+    user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.user_id"), nullable=True
+    )
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="locations")
 
     def __repr__(self):
         return f"<Location {self.location_id} {self.location_name} {self.address}>"
@@ -53,7 +59,7 @@ class UserLocation(Base, TableNameMixin):
 
     location_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("location.location_id", ondelete="CASCADE"),
+        ForeignKey("locations.location_id", ondelete="CASCADE"),
         primary_key=True,
     )
 
@@ -62,7 +68,6 @@ class UserLocation(Base, TableNameMixin):
         ForeignKey("users.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    location: Mapped["Location"] = relationship()
 
     def __repr__(self):
         return f"<UserLocation user_id={self.user_id} location_id={self.location_id}>"

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 from faker import Faker
 
-# from infrastructure.database.models.base import Base
+from infrastructure.database.repo.locations import LocationRepo
 from infrastructure.database.repo.users import UserRepo
 
 
@@ -24,6 +24,13 @@ class RequestsRepo:
         """
         return UserRepo(self.session)
 
+    @property
+    def locations(self) -> LocationRepo:
+        """
+        The User repository sessions are required to manage user operations.
+        """
+        return LocationRepo(self.session)
+
 
 if __name__ == "__main__":
     import asyncio
@@ -32,7 +39,7 @@ if __name__ == "__main__":
     from tgbot.config import load_config
     from infrastructure.database.setup import create_engine
     from infrastructure.database.setup import create_session_pool
-    from tgbot.config import Config
+    # from infrastructure.database.models.base import Base
 
     config = load_config(".env")
     engine = create_engine(config.db, echo=True)
@@ -70,11 +77,12 @@ if __name__ == "__main__":
     async def seed_fake_data():
         async with session_pool() as session:
             repo = RequestsRepo(session)
-        Faker.seed(0)
+        Faker.seed(42)
         fake = Faker()
         users = []
+        locations =[]
 
-        for _ in range(10):
+        for id in range(5):
             user = await repo.users.get_or_upsert_user(
                 user_id=fake.pyint(),
                 username=fake.user_name(),
@@ -82,6 +90,13 @@ if __name__ == "__main__":
                 language=fake.language_code(),
             )
             users.append(user)
+            location = await repo.locations.get_or_upsert_location(
+                location_id=id,
+                location_name=fake.street_name(),
+                address=fake.street_address(),
+                has_solarium=fake.boolean(chance_of_getting_true=65)
+            )
+            locations.append(location)
 
     async def main():
         await example_usage()

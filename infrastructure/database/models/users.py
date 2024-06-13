@@ -1,6 +1,6 @@
-from typing import Annotated, Optional
+from typing import Optional
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy import text, BIGINT, Boolean, true
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
@@ -8,11 +8,6 @@ from sqlalchemy.orm import mapped_column
 from infrastructure.database.models.locations import Location
 
 from .base import Base, TimestampMixin, TableNameMixin, str_128
-
-# Users ForeignKey
-user_fk = Annotated[
-    int, mapped_column(BIGINT, ForeignKey("users.user_id", ondelete="CASCADE"))
-]
 
 
 class User(Base, TimestampMixin, TableNameMixin):
@@ -44,7 +39,7 @@ class User(Base, TimestampMixin, TableNameMixin):
     active: Mapped[bool] = mapped_column(Boolean, server_default=true())
     logged_as: Mapped[Optional[str_128]]
 
-    locations: Mapped[Optional[list['Location']]] = relationship()
+    locations: Mapped[list['Location']] = relationship("Location", back_populates="user")
 
     def __repr__(self):
         return f"<User {self.user_id} {self.username} {self.full_name}>"

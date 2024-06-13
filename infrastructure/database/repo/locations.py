@@ -10,18 +10,18 @@ from infrastructure.database.repo.base import BaseRepo
 class LocationRepo(BaseRepo):
     async def get_or_upsert_location(
         self,
-        location_id: int,
-        location_name: Optional[str] = None,
-        full_name: Optional[str] = None,
-        language: str = 'en',
+        location_name: str,
+        address: str,
+        location_id: Optional[int] = None,
+        has_solarium: bool = False,
         # logged_as: Optional[str] = None,
     ):
         """
         Creates or updates a new location in the database and returns the location object.
         :param location_id: The location's ID.
-        :param full_name: The location's full name.
-        :param language: The location's language.
-        :param location_name: The location's location_name. It's an optional parameter.
+        :param location_name: The location's location_name.
+        :param address: The location's address.
+        :param has_solarium: If location has solarium.
         :return: Location object, None if there was an error while making a transaction.
         """
 
@@ -30,18 +30,22 @@ class LocationRepo(BaseRepo):
 
         # Common values to insert
         values = {
-            "location_id": location_id,
             "location_name": location_name,
-            "full_name": full_name,
-            "language": language,
+            "address": address,
+            "has_solarium": has_solarium,
         }
+
+        if location_id:
+            values['location_id'] = location_id
 
         if dialect_name == "postgresql":
             # PostgreSQL upsert statement
             insert_stmt = (
                 pg_insert(Location)
                 .values(**values)
-                .on_conflict_do_update(index_elements=[Location.location_id], set_=values)
+                .on_conflict_do_update(
+                    index_elements=[Location.location_id], set_=values
+                )
                 .returning(Location)
             )
 
@@ -68,9 +72,12 @@ class LocationRepo(BaseRepo):
         await self.session.commit()
         return inserted_location
 
-
     async def set_location_logged_as(self, telegram_id: int, logged_as: str | None):
-        insert_stmt = update(Location).where(Location.location_id == telegram_id).values(logged_as = logged_as)
+        insert_stmt = (
+            update(Location)
+            .where(Location.location_id == telegram_id)
+            .values(logged_as=logged_as)
+        )
         result = await self.session.execute(insert_stmt)
         await self.session.commit()
 

@@ -1,7 +1,7 @@
 import datetime
 
-from sqlalchemy import String
-from sqlalchemy.dialects.postgresql import INTEGER, TIMESTAMP
+from sqlalchemy import BIGINT, TIMESTAMP, ForeignKey, Integer, String
+# from sqlalchemy.dialects.postgresql import INTEGER, TIMESTAMP
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
@@ -10,10 +10,15 @@ from sqlalchemy.sql.functions import func
 from typing_extensions import Annotated
 
 # integer primary key
-int_pk = Annotated[int, mapped_column(INTEGER, primary_key=True)]
+int_pk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=True)]
 
 # string column with length 128
 str_128 = Annotated[str, mapped_column(String(128))]
+
+# Users ForeignKey
+user_fk = Annotated[
+    int, mapped_column(BIGINT, ForeignKey("users.user_id", ondelete="CASCADE"))
+]
 
 
 class Base(DeclarativeBase):
