@@ -99,7 +99,7 @@ if __name__ == "__main__":
             )
             locations.append(location)
 
-        for location in random.sample(locations, 3, counts=[2, 2, 1]):
+        for location in random.sample(locations, 4):
             await repo.users.add_user_location(
                 user_id=random.choice(users).user_id, location_id=location.location_id
             )

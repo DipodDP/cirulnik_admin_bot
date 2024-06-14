@@ -37,15 +37,16 @@ class LocationRepo(BaseRepo):
 
         if location_id:
             values["location_id"] = location_id
+            index_elements = [Location.location_id]
+        else:
+            index_elements = [Location.location_name]
 
         if dialect_name == "postgresql":
             # PostgreSQL upsert statement
             insert_stmt = (
                 pg_insert(Location)
                 .values(**values)
-                .on_conflict_do_update(
-                    index_elements=[Location.location_id], set_=values
-                )
+                .on_conflict_do_update(index_elements=index_elements, set_=values)
                 .returning(Location)
             )
 
@@ -68,7 +69,9 @@ class LocationRepo(BaseRepo):
             last_id = result.scalar_one()
 
             if not last_id:
-                location_query = select(Location).where(Location.location_name == values['location_name'])
+                location_query = select(Location).where(
+                    Location.location_name == values["location_name"]
+                )
 
             else:
                 # Query the location after insertion/updation

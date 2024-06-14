@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy import insert, select, update
+from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
 
@@ -100,9 +101,12 @@ class UserRepo(BaseRepo):
         return result.scalar()
 
     async def add_user_location(self, user_id: int, location_id: int):
-        stmt = (
-            insert(UserLocation)
-            .values(user_id=user_id, location_id=location_id)
-        )
-        await self.session.execute(stmt)
-        await self.session.commit()
+        try:
+            stmt = (
+                insert(UserLocation)
+                .values(user_id=user_id, location_id=location_id)
+            )
+            await self.session.execute(stmt)
+            await self.session.commit()
+        except Exception as e:
+            print(e)

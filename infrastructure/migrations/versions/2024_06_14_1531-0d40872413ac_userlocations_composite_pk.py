@@ -1,8 +1,8 @@
-"""Locations
+"""UserLocations composite pk
 
-Revision ID: 76086f9f06df
+Revision ID: 0d40872413ac
 Revises: 54a4e7811a89
-Create Date: 2024-06-13 21:11:09.966351
+Create Date: 2024-06-14 15:31:00.213114
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '76086f9f06df'
+revision: str = '0d40872413ac'
 down_revision: Union[str, None] = '54a4e7811a89'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,7 +34,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.BIGINT(), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['locations.location_id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('location_id')
+    sa.PrimaryKeyConstraint('location_id', 'user_id')
     )
     # ### end Alembic commands ###
 
