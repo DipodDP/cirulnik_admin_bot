@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from faker import Faker
 
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     # from infrastructure.database.models.base import Base
 
     config = load_config(".env")
-    engine = create_engine(config.db, echo=True)
+    engine = create_engine(config.db)
     session_pool = create_session_pool(engine)
 
     async def example_usage():
@@ -84,25 +85,37 @@ if __name__ == "__main__":
         locations = []
 
         for id in range(5):
-            user = await repo.users.get_or_upsert_user(
-                user_id=fake.pyint(),
-                username=fake.user_name(),
-                full_name=fake.name(),
-                language=fake.language_code(),
-            )
-            users.append(user)
-            location = await repo.locations.get_or_upsert_location(
-                location_id=id,
-                location_name=fake.street_name(),
-                address=fake.street_address(),
-                has_solarium=fake.boolean(chance_of_getting_true=65),
-            )
-            locations.append(location)
+            try:
+                user = await repo.users.get_or_upsert_user(
+                    user_id=fake.pyint(),
+                    username=fake.user_name(),
+                    full_name=fake.name(),
+                    language=fake.language_code(),
+                )
+                users.append(user)
+                location = await repo.locations.get_or_upsert_location(
+                    location_id=id,
+                    location_name=fake.street_name(),
+                    address=fake.street_address(),
+                    has_solarium=fake.boolean(chance_of_getting_true=65),
+                )
+                locations.append(location)
 
-        for location in random.sample(locations, 4):
-            await repo.users.add_user_location(
-                user_id=random.choice(users).user_id, location_id=location.location_id
-            )
+                for location in random.sample(locations, len(locations)):
+                    await repo.users.add_user_location(
+                        user_id=random.choice(users).user_id,
+                        location_id=location.location_id,
+                    )
+            except IntegrityError as e:
+                print(
+                    "----------- DB exception: -----------\n",
+                    e.orig,
+                    "\n",
+                    e.statement,
+                    e.params,
+                )
+            finally:
+                await repo.session.close()
 
     async def main():
         await example_usage()

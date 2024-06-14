@@ -101,12 +101,9 @@ class UserRepo(BaseRepo):
         return result.scalar()
 
     async def add_user_location(self, user_id: int, location_id: int):
-        try:
-            stmt = (
-                insert(UserLocation)
-                .values(user_id=user_id, location_id=location_id)
-            )
-            await self.session.execute(stmt)
-            await self.session.commit()
-        except Exception as e:
-            print(e)
+        insert_stmt = (
+            insert(UserLocation)
+            .values(user_id=user_id, location_id=location_id)
+        )
+        await self.session.execute(insert_stmt)
+        await self.session.commit()
