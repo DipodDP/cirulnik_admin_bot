@@ -94,8 +94,8 @@ class LocationRepo(BaseRepo):
 
         return result.last_updated_params()
 
-    async def get_location_by_id(self, telegram_id: int):
-        select_stmt = select(Location).where(Location.location_id == telegram_id)
+    async def get_location_by_id(self, location_id: int):
+        select_stmt = select(Location).where(Location.location_id == location_id)
         result = await self.session.execute(select_stmt)
 
         return result.scalars().first()

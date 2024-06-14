@@ -34,6 +34,7 @@ class RequestsRepo:
 
 if __name__ == "__main__":
     import asyncio
+    import random
 
     from infrastructure.database.models import *
     from tgbot.config import load_config
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         Faker.seed(42)
         fake = Faker()
         users = []
-        locations =[]
+        locations = []
 
         for id in range(5):
             user = await repo.users.get_or_upsert_user(
@@ -94,9 +95,14 @@ if __name__ == "__main__":
                 location_id=id,
                 location_name=fake.street_name(),
                 address=fake.street_address(),
-                has_solarium=fake.boolean(chance_of_getting_true=65)
+                has_solarium=fake.boolean(chance_of_getting_true=65),
             )
             locations.append(location)
+
+        for location in random.sample(locations, 3, counts=[2, 2, 1]):
+            await repo.users.add_user_location(
+                user_id=random.choice(users).user_id, location_id=location.location_id
+            )
 
     async def main():
         await example_usage()

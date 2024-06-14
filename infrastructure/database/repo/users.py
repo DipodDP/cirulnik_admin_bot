@@ -1,9 +1,10 @@
 from typing import Optional
-from sqlalchemy import select, update
+from sqlalchemy import insert, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
 
 from infrastructure.database.models import User
+from infrastructure.database.models.locations import UserLocation
 from infrastructure.database.repo.base import BaseRepo
 
 
@@ -97,3 +98,11 @@ class UserRepo(BaseRepo):
         result = await self.session.execute(select_stmt)
 
         return result.scalar()
+
+    async def add_user_location(self, user_id: int, location_id: int):
+        stmt = (
+            insert(UserLocation)
+            .values(user_id=user_id, location_id=location_id)
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
