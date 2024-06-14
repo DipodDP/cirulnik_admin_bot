@@ -100,11 +100,13 @@ class LocationRepo(BaseRepo):
     async def get_location_by_id(self, location_id: int):
         select_stmt = select(Location).where(Location.location_id == location_id)
         result = await self.session.execute(select_stmt)
+        await self.session.commit()
 
         return result.scalars().first()
 
     async def get_all_locations(self):
         select_stmt = select(Location).order_by(Location.location_name.asc())
         result = await self.session.execute(select_stmt)
+        await self.session.commit()
 
         return result.scalars().all()

@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from typing import Optional
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
@@ -15,7 +16,7 @@ class UserRepo(BaseRepo):
         user_id: int,
         username: Optional[str] = None,
         full_name: Optional[str] = None,
-        language: str = 'en',
+        language: str = "en",
         # logged_as: Optional[str] = None,
     ):
         """
@@ -76,7 +77,9 @@ class UserRepo(BaseRepo):
         return scalar
 
     async def set_user_logged_as(self, telegram_id: int, logged_as: str | None):
-        insert_stmt = update(User).where(User.user_id == telegram_id).values(logged_as = logged_as)
+        insert_stmt = (
+            update(User).where(User.user_id == telegram_id).values(logged_as=logged_as)
+        )
         result = await self.session.execute(insert_stmt)
         await self.session.commit()
 
@@ -94,16 +97,48 @@ class UserRepo(BaseRepo):
 
         return result.scalars().all()
 
-    async def get_user_logged_as(self, telegram_id: int):
-        select_stmt = select(User.logged_as).where(User.user_id == telegram_id)
+    async def get_user_logged_as(self, user_id: int):
+        select_stmt = select(User.logged_as).where(User.user_id == user_id)
         result = await self.session.execute(select_stmt)
 
         return result.scalar()
 
     async def add_user_location(self, user_id: int, location_id: int):
-        insert_stmt = (
-            insert(UserLocation)
-            .values(user_id=user_id, location_id=location_id)
+        insert_stmt = insert(UserLocation).values(
+            user_id=user_id, location_id=location_id
         )
         await self.session.execute(insert_stmt)
         await self.session.commit()
+
+    async def del_user_location(self, user_id: int, location_id: int):
+        insert_stmt = delete(UserLocation).where(
+            UserLocation.user_id == user_id, UserLocation.location_id == location_id
+        )
+        await self.session.execute(insert_stmt)
+        await self.session.commit()
+
+    async def get_all_users_locations(self) -> Sequence[UserLocation]:
+        """
+        Retrieve all user locations, ordered by user_id.
+        :return: List of UserLocation objects.
+        """
+
+        select_stmt = select(UserLocation).order_by(UserLocation.user_id.asc())
+        result = await self.session.execute(select_stmt)
+
+        return result.scalars().all()
+
+    async def get_all_locations_by_user(self, user_id: int) -> Sequence[UserLocation]:
+        """
+        Retrieve all locations for a specific user, ordered by location_id.
+        :return: List of UserLocation objects.
+        """
+
+        select_stmt = (
+            select(UserLocation)
+            .where(UserLocation.user_id == user_id)
+            .order_by(UserLocation.location_id.asc())
+        )
+        result = await self.session.execute(select_stmt)
+
+        return result.scalars().all()

@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # from infrastructure.database.models.base import Base
 
     config = load_config(".env")
-    engine = create_engine(config.db)
+    engine = create_engine(config.db, echo=True)
     session_pool = create_session_pool(engine)
 
     async def example_usage():
@@ -101,12 +101,8 @@ if __name__ == "__main__":
                 )
                 locations.append(location)
 
-                for location in random.sample(locations, len(locations)):
-                    await repo.users.add_user_location(
-                        user_id=random.choice(users).user_id,
-                        location_id=location.location_id,
-                    )
             except IntegrityError as e:
+                await session.rollback()
                 print(
                     "----------- DB exception: -----------\n",
                     e.orig,
@@ -114,8 +110,43 @@ if __name__ == "__main__":
                     e.statement,
                     e.params,
                 )
-            finally:
-                await repo.session.close()
+
+        try:
+            for location in random.sample(locations, len(locations)):
+                    await repo.users.add_user_location(
+                        user_id=random.choice(users).user_id,
+                        location_id=location.location_id,
+                    )
+
+        except IntegrityError as e:
+            await session.rollback()
+            print(
+                "----------- DB exception: -----------\n",
+                e.orig,
+                "\n",
+                e.statement,
+                e.params,
+            )
+
+            locations = await repo.users.get_all_users_locations()
+
+            for location in random.sample(locations, len(locations)):
+                try:
+                    await repo.users.del_user_location(
+                        user_id=location.user_id,
+                        location_id=location.location_id,
+                    )
+
+                except IntegrityError as e:
+                    print(
+                        "----------- DB exception: -----------\n",
+                        e.orig,
+                        "\n",
+                        e.statement,
+                        e.params,
+                    )
+        finally:
+            await repo.session.close()
 
     async def main():
         await example_usage()
