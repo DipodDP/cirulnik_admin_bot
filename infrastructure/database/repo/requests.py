@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # from infrastructure.database.models.base import Base
 
     config = load_config(".env")
-    engine = create_engine(config.db, echo=True)
+    engine = create_engine(config.db, echo=False)
     session_pool = create_session_pool(engine)
 
     async def example_usage():
@@ -73,6 +73,19 @@ if __name__ == "__main__":
                 username="johndoe",
                 # logged_as="Noname"
             )
+
+            users = await repo.users.get_all_users()
+
+            # Get users with their locations
+            for user in users:
+                print(f"User: {user.full_name} {user.username}({user.user_id})")
+
+                user_locations = await repo.users.get_all_user_locations_relationships(
+                    user_id=user.user_id
+                )
+
+                for location in user_locations:
+                    print(f"# Location: {location.location_name}")
 
         return user
 
@@ -113,20 +126,10 @@ if __name__ == "__main__":
 
         try:
             for location in random.sample(locations, len(locations)):
-                    await repo.users.add_user_location(
-                        user_id=random.choice(users).user_id,
-                        location_id=location.location_id,
-                    )
-
-        except IntegrityError as e:
-            await session.rollback()
-            print(
-                "----------- DB exception: -----------\n",
-                e.orig,
-                "\n",
-                e.statement,
-                e.params,
-            )
+                await repo.users.add_user_location(
+                    user_id=random.choice(users).user_id,
+                    location_id=location.location_id,
+                )
 
             locations = await repo.users.get_all_users_locations()
 
@@ -145,6 +148,17 @@ if __name__ == "__main__":
                         e.statement,
                         e.params,
                     )
+
+        except IntegrityError as e:
+            await session.rollback()
+            print(
+                "----------- DB exception: -----------\n",
+                e.orig,
+                "\n",
+                e.statement,
+                e.params,
+            )
+
         finally:
             await repo.session.close()
 

@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
 
 from infrastructure.database.models import User
-from infrastructure.database.models.locations import UserLocation
+from infrastructure.database.models.locations import Location, UserLocation
 from infrastructure.database.repo.base import BaseRepo
 
 
@@ -92,7 +92,13 @@ class UserRepo(BaseRepo):
         return result.scalars().first()
 
     async def get_all_users(self):
-        select_stmt = select(User).order_by(User.username.asc()).having(User.active)
+        select_stmt = (
+            select(User)
+            .where(User.active)
+            # .join(UserLocation, User.user_id == UserLocation.user_id)
+            # .join(Location, UserLocation.location_id == Location.location_id)
+            .order_by(User.username.asc())
+        )
         result = await self.session.execute(select_stmt)
 
         return result.scalars().all()
@@ -102,6 +108,16 @@ class UserRepo(BaseRepo):
         result = await self.session.execute(select_stmt)
 
         return result.scalar()
+
+    async def get_all_user_locations_relationships(self, user_id: int):
+        stmt = (
+            select(Location, User.username)
+            .join(User.locations)
+            .join(Location)
+            .where(User.user_id == user_id)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
 
     async def add_user_location(self, user_id: int, location_id: int):
         insert_stmt = insert(UserLocation).values(

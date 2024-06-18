@@ -1,9 +1,9 @@
 # from typing import Optional
 from sqlalchemy import BIGINT, Boolean, ForeignKey, Integer, String, true
-from sqlalchemy.orm import Mapped, MappedColumn, relationship
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
 
-from .base import Base, TimestampMixin, TableNameMixin, user_fk, int_pk, str_128
+from .base import Base, TimestampMixin, TableNameMixin, int_pk, str_128
 
 
 class Location(Base, TimestampMixin, TableNameMixin):
@@ -52,15 +52,12 @@ class UserLocation(Base, TableNameMixin):
 
     """
 
+    user_id: Mapped[int] = mapped_column(
+        BIGINT, ForeignKey("users.user_id", ondelete="CASCADE"), primary_key=True
+    )
     location_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("locations.location_id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    user_id: Mapped[int] = mapped_column(
-        BIGINT,
-        ForeignKey("users.user_id", ondelete="CASCADE"),
-        primary_key=True
+        ForeignKey("locations.location_id", ondelete="RESTRICT"),
     )
 
     location: Mapped["Location"] = relationship()
