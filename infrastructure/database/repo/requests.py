@@ -41,11 +41,21 @@ if __name__ == "__main__":
     from tgbot.config import load_config
     from infrastructure.database.setup import create_engine
     from infrastructure.database.setup import create_session_pool
-    # from infrastructure.database.models.base import Base
+    from infrastructure.database.models.base import Base
 
     config = load_config(".env")
     engine = create_engine(config.db, echo=False)
     session_pool = create_session_pool(engine)
+
+    async def init_db():
+        async with session_pool():
+            # Drop all tables
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.drop_all)
+
+            # Create all tables
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
 
     async def example_usage():
         """
@@ -57,13 +67,6 @@ if __name__ == "__main__":
 
         async with session_pool() as session:
             repo = RequestsRepo(session)
-            # Base.metadata.drop_all(engine)
-            # async with engine.begin() as conn:
-            #     # Use run_sync to execute the CreateTable operation
-            #     await conn.run_sync(Base.metadata.drop_all)
-            # async with engine.begin() as conn:
-            #     # Use run_sync to execute the CreateTable operation
-            #     await conn.run_sync(Base.metadata.create_all)
 
             # Replace user details with the actual values
             user = await repo.users.get_or_upsert_user(
@@ -83,7 +86,6 @@ if __name__ == "__main__":
                 user_locations = await repo.users.get_all_user_locations_relationships(
                     user_id=user.user_id
                 )
-
                 for location in user_locations:
                     print(f"# Location: {location.location_name}")
 
@@ -113,7 +115,6 @@ if __name__ == "__main__":
                     has_solarium=fake.boolean(chance_of_getting_true=65),
                 )
                 locations.append(location)
-
             except IntegrityError as e:
                 await session.rollback()
                 print(
@@ -139,7 +140,6 @@ if __name__ == "__main__":
                         user_id=location.user_id,
                         location_id=location.location_id,
                     )
-
                 except IntegrityError as e:
                     print(
                         "----------- DB exception: -----------\n",
@@ -163,6 +163,7 @@ if __name__ == "__main__":
             await repo.session.close()
 
     async def main():
+        # await init_db()
         await example_usage()
         await seed_fake_data()
 

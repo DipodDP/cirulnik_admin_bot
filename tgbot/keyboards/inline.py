@@ -13,10 +13,10 @@ class InlineButtons(str, Enum):
 # def very_simple_keyboard():
 #     buttons = [
 #         [
-#             InlineKeyboardButton(text="📝 Create an order",
-#                                  callback_data="create_order"),
-#             InlineKeyboardButton(text="📋 My orders",
-#                                  callback_data="my_orders"),
+#             InlineKeyboardButton(text="📝 Create an location",
+#                                  callback_data="create_location"),
+#             InlineKeyboardButton(text="📋 My locations",
+#                                  callback_data="my_locations"),
 #         ],
 #     ]
 #
@@ -63,15 +63,15 @@ class LocationCallbackData(CallbackData, prefix="location"):
 
 
 def locations_keyboard(locations: list):
-    # Here we use a list of orders as a parameter (from simple_menu.py)
+    # Here we use a list of locations as a parameter (from simple_menu.py)
 
     keyboard = InlineKeyboardBuilder()
     for location in locations:
         keyboard.button(
             text=f"✂️ {location['title']}",
-            # Here we use an instance of OrderCallbackData class as callback_data parameter
-            # order id is the field in OrderCallbackData class, that we defined above
-            callback_data=LocationCallbackData(location_id=location["id"]),
+            # Here we use an instance of LocationCallbackData class as callback_data parameter
+            # location id is the field in LocationCallbackData class, that we defined above
+            callback_data=LocationCallbackData(location_id=location["id"])
         )
 
     keyboard.adjust(1)
