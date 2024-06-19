@@ -4,8 +4,11 @@ from tgbot.keyboards.reply import NavButtons, ReplyButtons
 
 
 class AdminHandlerMessages(str, Enum):
-    GREETINGS = "Hello, admin! It's Cirulnik admin bot.\n Press /stop to stop bot\n"
+    GREETINGS = "Hello, admin! It's Cirulnik admin bot.\nPress /stop to stop bot\nPress /loc to update locations"
     STOPPING = "Stopping bot..."
+    UPDATING_LOCATIONS = "Send locations in JSON format to update"
+    SUCCESSFUL_UPDATING = "Updating is sucessful! Updated: "
+    UNSUCCESSFUL_UPDATING = "Updating went wrong!"
 
 
 class UserHandlerMessages(str, Enum):

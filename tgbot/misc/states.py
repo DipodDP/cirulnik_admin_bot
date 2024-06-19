@@ -28,6 +28,10 @@ class CommonStates(StatesGroup):
             return False
 
 
+class AdminStates(StatesGroup):
+    updating_location = State()
+
+
 class ReportMenuStates(StatesGroup):
     creating_report = State()
     choosing_location = State()

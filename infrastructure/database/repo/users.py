@@ -119,7 +119,7 @@ class UserRepo(BaseRepo):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_users_by_location(self, location_id: int):
+    async def get_users_by_location(self, location_id: int | None):  # TODO: if location_id is None return all owners
         select_stmt = (
             select(User)
             .join(UserLocation)
