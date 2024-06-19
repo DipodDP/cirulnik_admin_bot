@@ -87,7 +87,13 @@ if __name__ == "__main__":
                     user_id=user.user_id
                 )
                 for location in user_locations:
-                    print(f"# Location: {location.location_name}")
+                    print(
+                        f"# Location: {location.location_name} ({location.location_id})"
+                    )
+
+                    users = await repo.users.get_users_by_location(location.location_id)
+                    for user in users:
+                        print(f"Has access: {user}")
 
         return user
 
@@ -133,7 +139,6 @@ if __name__ == "__main__":
                 )
 
             locations = await repo.users.get_all_users_locations()
-
             for location in random.sample(locations, len(locations)):
                 try:
                     await repo.users.del_user_location(

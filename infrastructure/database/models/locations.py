@@ -1,4 +1,3 @@
-# from typing import Optional
 from sqlalchemy import BIGINT, Boolean, ForeignKey, Integer, String, true
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
@@ -32,6 +31,8 @@ class Location(Base, TimestampMixin, TableNameMixin):
     address: Mapped[str_128]
     has_solarium: Mapped[bool] = mapped_column(Boolean, server_default=true())
 
+    users: Mapped[list["UserLocation"]] = relationship(back_populates="location")
+
     def __repr__(self):
         return f"<Location {self.location_id} {self.location_name} {self.address}>"
 
@@ -60,6 +61,7 @@ class UserLocation(Base, TableNameMixin):
         ForeignKey("locations.location_id", ondelete="RESTRICT"),
     )
 
+    user: Mapped["User"] = relationship()
     location: Mapped["Location"] = relationship()
 
     def __repr__(self):

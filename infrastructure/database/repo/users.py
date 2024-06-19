@@ -119,6 +119,17 @@ class UserRepo(BaseRepo):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    async def get_users_by_location(self, location_id: int):
+        select_stmt = (
+            select(User)
+            .join(UserLocation)
+            .join(Location)
+            .where(Location.location_id == location_id)
+        )
+
+        results = await self.session.execute(select_stmt)
+        return results.scalars().all()
+
     async def add_user_location(self, user_id: int, location_id: int):
         insert_stmt = insert(UserLocation).values(
             user_id=user_id, location_id=location_id

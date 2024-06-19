@@ -39,7 +39,7 @@ class User(Base, TimestampMixin, TableNameMixin):
     active: Mapped[bool] = mapped_column(Boolean, server_default=true())
     logged_as: Mapped[Optional[str_128]]
 
-    locations: Mapped[list['UserLocation']] = relationship()
+    locations: Mapped[list['UserLocation']] = relationship(back_populates="user")
 
     def __repr__(self):
         return f"<User {self.user_id} {self.username} {self.full_name}>"
