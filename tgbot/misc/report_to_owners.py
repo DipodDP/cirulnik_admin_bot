@@ -17,7 +17,7 @@ class ReportBuilder:
     def __init__(self, data: dict[str, Any]):
         self.content: Text
         self.date: DateTime = datetime.today()
-        self.location: Text | None = data.get("location")
+        self.location: Text = data.get("location", "")
         self.author: str | None = "@" + str(data.get("author"))
         self.author_name: str | None = data.get("author_name")
         self.location_text: Tuple[str] = (

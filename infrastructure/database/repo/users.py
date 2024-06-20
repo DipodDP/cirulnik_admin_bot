@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from typing import Optional
 from sqlalchemy import delete, insert, select, update
-from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as my_insert
 

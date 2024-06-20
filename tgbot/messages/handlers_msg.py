@@ -8,7 +8,7 @@ class AdminHandlerMessages(str, Enum):
     STOPPING = "Stopping bot..."
     UPDATING_LOCATIONS = "Send locations in JSON format to update"
     SUCCESSFUL_UPDATING = "Updating is sucessful! Updated: "
-    UNSUCCESSFUL_UPDATING = "Updating went wrong!"
+    UNSUCCESSFUL_UPDATING = "Updating went wrong!\n"
 
 
 class UserHandlerMessages(str, Enum):

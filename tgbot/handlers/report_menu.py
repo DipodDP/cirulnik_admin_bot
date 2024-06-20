@@ -5,6 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.utils.formatting import as_section, as_key_value, as_marked_list
 from betterlogging import logging
 from infrastructure.database.models.users import User
+from infrastructure.database.repo.requests import RequestsRepo
 from tgbot.config import Config
 
 from tgbot.handlers.user import user_start
@@ -196,7 +197,9 @@ async def upload_solarium_counter(
 @report_menu_router.message(
     F.text == NavButtons.BTN_SEND, ReportMenuStates.completing_report
 )
-async def complete_report(message: types.Message, state: FSMContext, config: Config):
+async def complete_report(
+    message: types.Message, state: FSMContext, repo: RequestsRepo
+):
     await message.delete()
     await delete_prev_message(state)
 
@@ -215,14 +218,17 @@ async def complete_report(message: types.Message, state: FSMContext, config: Con
         reply_markup=user_menu_keyboard(),
     )
 
+    location_id: int | None = state_data.get("location_id")
+    users = await repo.users.get_users_by_location(location_id)
+
     if state_data["daytime"] == "morning":
         report = ReportBuilder(state_data)
         text = report.construct_morning_report()
         media = report.build_album()
-        await on_report(message.bot, config.tg_bot.admin_ids, text, media)
+        await on_report(message.bot, [user.user_id for user in users], text, media)
 
     elif state_data["daytime"] == "evening":
         report = ReportBuilder(state_data)
         text = report.construct_evening_report()
         media = report.build_album()
-        await on_report(message.bot, config.tg_bot.admin_ids, text, media)
+        await on_report(message.bot, [user.user_id for user in users], text, media)

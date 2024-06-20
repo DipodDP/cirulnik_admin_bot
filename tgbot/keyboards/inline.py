@@ -1,7 +1,10 @@
+from collections.abc import Sequence
 from enum import Enum
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from infrastructure.database.models.locations import Location, UserLocation
 
 
 class InlineButtons(str, Enum):
@@ -71,7 +74,24 @@ def locations_keyboard(locations: list):
             text=f"✂️ {location['title']}",
             # Here we use an instance of LocationCallbackData class as callback_data parameter
             # location id is the field in LocationCallbackData class, that we defined above
-            callback_data=LocationCallbackData(location_id=location["id"])
+            callback_data=LocationCallbackData(location_id=location["id"]),
+        )
+
+    keyboard.adjust(1)
+
+    return keyboard.as_markup()
+
+
+def locations_update_keyboard(locations: Sequence[Location]):
+    # Here we use a list of locations as a parameter (from simple_menu.py)
+
+    keyboard = InlineKeyboardBuilder()
+    for location in locations:
+        keyboard.button(
+            text=f"✂️ {location.location_name}",
+            # Here we use an instance of LocationCallbackData class as callback_data parameter
+            # location id is the field in LocationCallbackData class, that we defined above
+            callback_data=LocationCallbackData(location_id=location.location_id),
         )
 
     keyboard.adjust(1)
