@@ -17,7 +17,11 @@ user_router = Router()
 
 
 @user_router.message(CommandStart())
-async def user_start(message: Message, state: FSMContext):
+async def user_start(
+    message: Message,
+    state: FSMContext,
+    db_error: Exception | None = None,
+):
     await message.delete() if message is not None else ...
     await delete_prev_message(state)
 
@@ -35,23 +39,31 @@ async def user_start(message: Message, state: FSMContext):
             UserHandlerMessages.GREETINGS.format(user=state_data["author_name"]),
             reply_markup=user_menu_keyboard(),
         )
+
     else:
         logger.info(f'Auth for {state_data.get("author_name")} has been rejected')
-        # Checking if user has username
-        if user := message.from_user:
-            if user.username:
-                answer = await message.answer(
-                    UserHandlerMessages.AUTHORIZATION,
-                    reply_markup=ReplyKeyboardRemove(),
-                )
 
-            else:
-                answer = await message.answer(
-                    UserHandlerMessages.ASK_USERNAME, reply_markup=ReplyKeyboardRemove()
-                )
-                await state.clear()
+        if db_error:
+            answer = await message.answer(UserHandlerMessages.ERROR)
+            logger.info(f"DB error! {db_error}")
+            await state.clear()
         else:
-            answer = None
+            # Checking if user has username
+            if user := message.from_user:
+                if user.username:
+                    answer = await message.answer(
+                        UserHandlerMessages.AUTHORIZATION,
+                        reply_markup=ReplyKeyboardRemove(),
+                    )
+
+                else:
+                    answer = await message.answer(
+                        UserHandlerMessages.ASK_USERNAME,
+                        reply_markup=ReplyKeyboardRemove(),
+                    )
+                    await state.clear()
+            else:
+                answer = None
 
     await state.update_data(prev_bot_message=answer)
 

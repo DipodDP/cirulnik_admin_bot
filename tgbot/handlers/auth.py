@@ -21,21 +21,26 @@ auth_router = Router()
 async def non_auth_message(
     event: Message | CallbackQuery,
     state: FSMContext,
-    user_from_db: User,
+    user_from_db: User | None = None,
+    db_error: Exception | None = None,
 ):
     if event.from_user:
         logger.info(f"User from DB: { user_from_db }")
+    if user_from_db:
+        await state.update_data(author=user_from_db.username)
+        await state.update_data(author_name=user_from_db.logged_as)
+        text = user_from_db.logged_as
+    else:
+        text = None
 
-    await state.update_data(author=user_from_db.username)
-    await state.update_data(author_name=user_from_db.logged_as)
     if isinstance(event, CallbackQuery):
         if event.message:
             message = Message(
                 message_id=event.message.message_id,
                 date=datetime.now(),
                 chat=event.message.chat,
-                text=user_from_db.logged_as,
-                from_user=event.from_user
+                text=text,
+                from_user=event.from_user,
             ).as_(event.bot)
         else:
             message = None
@@ -45,6 +50,6 @@ async def non_auth_message(
             from_user=event.from_user,
             date=datetime.now(),
             chat=event.chat,
-            text=user_from_db.logged_as,
+            text=text,
         ).as_(event.bot)
-    await user_start(message, state)
+    await user_start(message, state, db_error)

@@ -6,6 +6,7 @@ from tgbot.keyboards.reply import NavButtons, ReplyButtons
 class AdminHandlerMessages(str, Enum):
     GREETINGS = "Hello, admin! It's Cirulnik admin bot.\nPress /stop to stop bot\nPress /loc to update locations"
     STOPPING = "Stopping bot..."
+    ERROR = "Error!\n"
     UPDATING_LOCATIONS = "Send locations in JSON format to update"
     SUCCESSFUL_UPDATING = "Updating is sucessful! Updated: "
     UNSUCCESSFUL_UPDATING = "Updating went wrong!\n"
@@ -13,9 +14,10 @@ class AdminHandlerMessages(str, Enum):
 
 class UserHandlerMessages(str, Enum):
     GREETINGS = '{user}, добрый день, это бот администратора салонa "Цирюльникъ"'
-    ASK_USERNAME = "Ошибка, не указано имя пользователя Telegram!\n\nПожалуйста, укажите `Имя пользователя` в настройках аккаунта Telegram для продолжения работы с ботом."
+    ASK_USERNAME = "Ошибка, не указано имя пользователя Telegram!\n\nПожалуйста, укажите `Имя пользователя` в настройках аккаунта Telegram для продолжения работы с ботом"
     HELP = f'Нажмите команду /start и кнопку "{ReplyButtons.BTN_SEND_REPORT.value}"'
     AUTHORIZATION = "Ввведите свое имя и фамилию"
+    ERROR = "Что-то пошло не так! Пожалуйста, попробуйте позже"
 
 
 class ReportHandlerMessages(str, Enum):

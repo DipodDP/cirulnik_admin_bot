@@ -28,20 +28,24 @@ class DatabaseMiddleware(BaseMiddleware):
             repo = RequestsRepo(session)
             event_from_user = data.get("event_from_user")
 
-            user = (
-                await repo.users.get_or_upsert_user(
-                    event_from_user.id,
-                    event_from_user.username,
-                    event_from_user.full_name,
-                    event_from_user.language_code,
+            try:
+                user = (
+                    await repo.users.get_or_upsert_user(
+                        event_from_user.id,
+                        event_from_user.username,
+                        event_from_user.full_name,
+                        event_from_user.language_code,
+                    )
+                    if event_from_user is not None
+                    else None
                 )
-                if event_from_user is not None
-                else None
-            )
 
-            # access to session in handlers: repo.session.execute(stmt)
-            data["repo"] = repo
-            data["user_from_db"] = user
+                # access to session in handlers: repo.session.execute(stmt)
+                data["repo"] = repo
+                data["user_from_db"] = user
+
+            except Exception as e:
+                data["db_error"] = e
 
             result = await handler(event, data)
         return result

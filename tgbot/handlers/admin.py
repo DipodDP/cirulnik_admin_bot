@@ -28,12 +28,13 @@ admin_router.callback_query.filter(AdminFilter())
 @admin_router.message(CommandStart())
 @admin_router.message(StateFilter(None))
 @admin_router.callback_query(StateFilter(None))
-async def admin_start(event: Message | CallbackQuery, state: FSMContext):
+async def admin_start(event: Message | CallbackQuery, state: FSMContext, db_error: Exception | None = None):
     if isinstance(event, Message):
         message = event
     else:
         message = event.message
     await delete_prev_message(state)
+
 
     await state.set_state(CommonStates.authorized)
     await state.update_data(
@@ -42,11 +43,18 @@ async def admin_start(event: Message | CallbackQuery, state: FSMContext):
 
     if message and not isinstance(message, InaccessibleMessage):
         await message.delete()
-        answer = await message.answer(
-            AdminHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard()
-        )
+        if db_error:
+            answer = await message.answer(
+                    "\n".join([AdminHandlerMessages.ERROR, 'Database:', str(db_error)])
+            )
+
+        else:
+            answer = await message.answer(
+                AdminHandlerMessages.GREETINGS, reply_markup=user_menu_keyboard()
+            )
+
         await state.update_data(prev_bot_message=answer)
-    logger.debug(f"{await state.get_state()}, {await state.get_data()}")
+    logger.debug(f"{await state.get_state()}, {str(db_error)}")
 
 
 @admin_router.message(Command("stop"))
