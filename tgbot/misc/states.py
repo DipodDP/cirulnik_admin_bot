@@ -29,6 +29,7 @@ class CommonStates(StatesGroup):
 
 
 class AdminStates(StatesGroup):
+    updating_users = State()
     updating_locations = State()
     updating_user_location = State()
 

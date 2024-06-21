@@ -1,10 +1,12 @@
 from collections.abc import Sequence
 from enum import Enum
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+# from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from infrastructure.database.models.locations import Location, UserLocation
+from infrastructure.database.models.locations import Location
+from infrastructure.database.models.users import User
 
 
 class InlineButtons(str, Enum):
@@ -51,6 +53,20 @@ def daytime_keyboard():
 
 
 # For a more advanced usage of callback_data, you can use the CallbackData factory
+class UserCallbackData(CallbackData, prefix="user"):
+    """
+    This class represents a CallbackData object for users.
+
+    - When used in InlineKeyboardMarkup, you have to create an instance of this class, run .pack() method, and pass to callback_data parameter.
+
+    - When used in InlineKeyboardBuilder, you have to create an instance of this class and pass to callback_data parameter (without .pack() method).
+
+    - In handlers you have to import this class and use it as a filter for callback query handlers, and then unpack callback_data parameter to get the data.
+    """
+
+    user_id: int
+
+
 class LocationCallbackData(CallbackData, prefix="location"):
     """
     This class represents a CallbackData object for locations.
@@ -65,15 +81,28 @@ class LocationCallbackData(CallbackData, prefix="location"):
     location_id: int
 
 
-def locations_keyboard(locations: list):
-    # Here we use a list of locations as a parameter (from simple_menu.py)
+def users_update_keyboard(users: Sequence[User]):
+    # Here we use a list of users as a parameter (from simple_menu.py)
 
+    keyboard = InlineKeyboardBuilder()
+    for user in users:
+        keyboard.button(
+            text=f"💇🏼‍♀️ {user.logged_as if user.logged_as else user.full_name}",
+            # Here we use an instance of UserCallbackData class as callback_data parameter
+            # user id is the field in UserCallbackData class, that we defined above
+            callback_data=UserCallbackData(user_id=user.user_id),
+        )
+
+    keyboard.adjust(1)
+
+    return keyboard.as_markup()
+
+
+def locations_keyboard(locations: list):
     keyboard = InlineKeyboardBuilder()
     for location in locations:
         keyboard.button(
             text=f"✂️ {location['title']}",
-            # Here we use an instance of LocationCallbackData class as callback_data parameter
-            # location id is the field in LocationCallbackData class, that we defined above
             callback_data=LocationCallbackData(location_id=location["id"]),
         )
 
@@ -83,14 +112,10 @@ def locations_keyboard(locations: list):
 
 
 def locations_update_keyboard(locations: Sequence[Location]):
-    # Here we use a list of locations as a parameter (from simple_menu.py)
-
     keyboard = InlineKeyboardBuilder()
     for location in locations:
         keyboard.button(
             text=f"✂️ {location.location_name}",
-            # Here we use an instance of LocationCallbackData class as callback_data parameter
-            # location id is the field in LocationCallbackData class, that we defined above
             callback_data=LocationCallbackData(location_id=location.location_id),
         )
 
