@@ -58,16 +58,17 @@ async def choose_daytime(message: Message, state: FSMContext, user_from_db: User
 
 # We can use F.data filter to filter callback queries by data field from CallbackQuery object
 @report_menu_router.callback_query(F.data == "morning")
-async def choosed_morning(query: CallbackQuery, state: FSMContext, config: Config):
+async def choosed_morning(query: CallbackQuery, state: FSMContext, user_from_db: User, repo: RequestsRepo):
     # Firstly, always answer callback query (as Telegram API requires)
     await query.answer()
 
     # This method will send an answer to the message with the button, that user pressed
     # Here query - is a CallbackQuery object, which contains message: Message object
     if isinstance(query.message, Message):
+        locations = await repo.locations.get_all_locations()
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
-            reply_markup=locations_keyboard(config.misc.locations_list),
+            reply_markup=locations_keyboard(user_from_db.user_id, locations),
         )
         await state.update_data(daytime=query.data)
         await state.set_state(ReportMenuStates.choosing_location)
@@ -75,12 +76,13 @@ async def choosed_morning(query: CallbackQuery, state: FSMContext, config: Confi
 
 
 @report_menu_router.callback_query(F.data == "evening")
-async def choosed_evening(query: CallbackQuery, state: FSMContext, config: Config):
+async def choosed_evening(query: CallbackQuery, state: FSMContext, user_from_db: User, repo: RequestsRepo):
     await query.answer()
     if isinstance(query.message, Message):
+        locations = await repo.locations.get_all_locations()
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
-            reply_markup=locations_keyboard(config.misc.locations_list),
+            reply_markup=locations_keyboard(user_from_db.user_id, locations),
         )
         await state.update_data(daytime=query.data)
         await state.set_state(ReportMenuStates.choosing_location)

@@ -87,7 +87,7 @@ class TgBot:
     """
 
     token: str
-    admin_ids: list[int | str]
+    admin_ids: list[int]
     proxy_url: str
     use_redis: bool
     console_log_level: str

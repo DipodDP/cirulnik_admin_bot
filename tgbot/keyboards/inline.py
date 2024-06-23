@@ -78,7 +78,8 @@ class LocationCallbackData(CallbackData, prefix="location"):
     - In handlers you have to import this class and use it as a filter for callback query handlers, and then unpack callback_data parameter to get the data.
     """
 
-    location_id: int
+    user_id: int
+    location_id: int | None
 
 
 def users_update_keyboard(users: Sequence[User]):
@@ -98,25 +99,12 @@ def users_update_keyboard(users: Sequence[User]):
     return keyboard.as_markup()
 
 
-def locations_keyboard(locations: list):
-    keyboard = InlineKeyboardBuilder()
-    for location in locations:
-        keyboard.button(
-            text=f"✂️ {location['title']}",
-            callback_data=LocationCallbackData(location_id=location["id"]),
-        )
-
-    keyboard.adjust(1)
-
-    return keyboard.as_markup()
-
-
-def locations_update_keyboard(locations: Sequence[Location]):
+def locations_keyboard(user_id: int, locations: Sequence[Location]):
     keyboard = InlineKeyboardBuilder()
     for location in locations:
         keyboard.button(
             text=f"✂️ {location.location_name}",
-            callback_data=LocationCallbackData(location_id=location.location_id),
+            callback_data=LocationCallbackData(user_id=user_id, location_id=location.location_id),
         )
 
     keyboard.adjust(1)

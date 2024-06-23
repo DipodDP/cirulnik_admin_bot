@@ -109,7 +109,7 @@ class ReportBuilder:
 
 async def on_report(
     bot: Bot | None,
-    admin_ids: list[int | str],
+    admin_ids: list[int],
     report: str,
     media: list[MediaType] = [],
 ):

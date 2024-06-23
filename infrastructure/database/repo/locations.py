@@ -86,17 +86,6 @@ class LocationRepo(BaseRepo):
         await self.session.commit()
         return inserted_location
 
-    async def set_location_logged_as(self, telegram_id: int, logged_as: str | None):
-        insert_stmt = (
-            update(Location)
-            .where(Location.location_id == telegram_id)
-            .values(logged_as=logged_as)
-        )
-        result = await self.session.execute(insert_stmt)
-        await self.session.commit()
-
-        return result.last_updated_params()
-
     async def get_location_by_id(self, location_id: int):
         select_stmt = select(Location).where(Location.location_id == location_id)
         result = await self.session.execute(select_stmt)

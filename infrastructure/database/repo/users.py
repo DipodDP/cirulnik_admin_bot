@@ -137,10 +137,10 @@ class UserRepo(BaseRepo):
         await self.session.commit()
 
     async def del_user_location(self, user_id: int, location_id: int):
-        insert_stmt = delete(UserLocation).where(
+        delete_stmt = delete(UserLocation).where(
             UserLocation.user_id == user_id, UserLocation.location_id == location_id
         )
-        await self.session.execute(insert_stmt)
+        await self.session.execute(delete_stmt)
         await self.session.commit()
 
     async def get_all_users_locations(self) -> Sequence[UserLocation]:

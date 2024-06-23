@@ -7,6 +7,10 @@ class AdminHandlerMessages(str, Enum):
     GREETINGS = "Hello, admin! It's Cirulnik admin bot.\nPress /stop to stop bot\nPress /loc to update locations\nPress /user to update users\nPress /add to add location"
     STOPPING = "Stopping bot..."
     ERROR = "Error!\n"
+
+
+class DatabaseHandlerMessages(str, Enum):
+    UPDATING_USER = "Пользователь:"
     UPDATING_LOCATIONS = "Send locations in JSON format to update"
     SUCCESSFUL_UPDATING = "Updating is sucessful! Updated: "
     UNSUCCESSFUL_UPDATING = "Updating went wrong!\n"
