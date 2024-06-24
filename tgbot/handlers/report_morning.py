@@ -3,7 +3,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types.message import Message
 from betterlogging import logging
 
-from tgbot.config import Config
 from tgbot.keyboards.reply import nav_keyboard, send_keyboard
 from tgbot.messages.handlers_msg import ReportHandlerMessages, ReportMastersQuantity
 from tgbot.misc.states import ReportMenuStates
@@ -87,7 +86,6 @@ async def enter_absent(message: types.Message, state: FSMContext):
 async def upload_open_reciept(
     message: types.Message,
     state: FSMContext,
-    config: Config,
     album: list[Message] | None = None,
 ):
     if album:
@@ -98,14 +96,8 @@ async def upload_open_reciept(
     await state.update_data(open_check=album if album else [message])
 
     state_data = await state.get_data()
-    has_solarium = next(
-        (
-            location["has_solarium"]
-            for location in config.misc.locations_list
-            if location["id"] == state_data["location_id"]
-        ),
-        None,
-    )
+
+    has_solarium = state_data.get('location_id')
     logger.debug(
         f"Location id: {state_data['location_id']}, has_solarium: {has_solarium}"
     )

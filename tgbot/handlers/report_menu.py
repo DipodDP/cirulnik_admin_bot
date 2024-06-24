@@ -6,13 +6,12 @@ from aiogram.utils.formatting import as_section, as_key_value, as_marked_list
 from betterlogging import logging
 from infrastructure.database.models.users import User
 from infrastructure.database.repo.requests import RequestsRepo
-from tgbot.config import Config
 
 from tgbot.handlers.user import user_start
 from tgbot.keyboards.inline import (
+    UserCallbackData,
     daytime_keyboard,
     locations_keyboard,
-    LocationCallbackData,
 )
 from tgbot.keyboards.reply import (
     NavButtons,
@@ -22,6 +21,7 @@ from tgbot.keyboards.reply import (
     send_keyboard,
 )
 from tgbot.messages.handlers_msg import (
+    DatabaseHandlerMessages,
     ReportClientsLost,
     ReportHandlerMessages,
     ReportMastersQuantity,
@@ -58,7 +58,9 @@ async def choose_daytime(message: Message, state: FSMContext, user_from_db: User
 
 # We can use F.data filter to filter callback queries by data field from CallbackQuery object
 @report_menu_router.callback_query(F.data == "morning")
-async def choosed_morning(query: CallbackQuery, state: FSMContext, user_from_db: User, repo: RequestsRepo):
+async def choosed_morning(
+    query: CallbackQuery, state: FSMContext, user_from_db: User, repo: RequestsRepo
+):
     # Firstly, always answer callback query (as Telegram API requires)
     await query.answer()
 
@@ -68,7 +70,7 @@ async def choosed_morning(query: CallbackQuery, state: FSMContext, user_from_db:
         locations = await repo.locations.get_all_locations()
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
-            reply_markup=locations_keyboard(user_from_db.user_id, locations),
+            reply_markup=locations_keyboard(locations, user_from_db.user_id),
         )
         await state.update_data(daytime=query.data)
         await state.set_state(ReportMenuStates.choosing_location)
@@ -76,13 +78,15 @@ async def choosed_morning(query: CallbackQuery, state: FSMContext, user_from_db:
 
 
 @report_menu_router.callback_query(F.data == "evening")
-async def choosed_evening(query: CallbackQuery, state: FSMContext, user_from_db: User, repo: RequestsRepo):
+async def choosed_evening(
+    query: CallbackQuery, state: FSMContext, user_from_db: User, repo: RequestsRepo
+):
     await query.answer()
     if isinstance(query.message, Message):
         locations = await repo.locations.get_all_locations()
         await query.message.edit_text(
             ReportHandlerMessages.CHOOSE_LOCATION,
-            reply_markup=locations_keyboard(user_from_db.user_id, locations),
+            reply_markup=locations_keyboard(locations, user_from_db.user_id),
         )
         await state.update_data(daytime=query.data)
         await state.set_state(ReportMenuStates.choosing_location)
@@ -90,75 +94,78 @@ async def choosed_evening(query: CallbackQuery, state: FSMContext, user_from_db:
 
 
 # To filter the callback data, that was created with CallbackData factory, you can use .filter() method
-@report_menu_router.callback_query(LocationCallbackData.filter())
+@report_menu_router.callback_query(UserCallbackData.filter())
 async def choose_location(
     query: CallbackQuery,
-    callback_data: LocationCallbackData,
+    callback_data: UserCallbackData,
     state: FSMContext,
-    config: Config,
+    repo: RequestsRepo,
 ):
     await query.answer()
 
     # You can get the data from callback_data object as attributes
     location_id = callback_data.location_id
 
-    # Then you can get the location from your database (here we use a simple list)
-    location_info = next(
-        (
-            location
-            for location in config.misc.locations_list
-            if location["id"] == location_id
-        ),
-        None,
-    )
+    if isinstance(query.message, Message) and location_id:
+        location = await repo.locations.get_location_by_id(location_id)
 
-    if isinstance(query.message, Message):
-        if location_info:
-            # Here we use aiogram.utils.formatting to format the text
-            # https://docs.aiogram.dev/en/latest/utils/formatting.html
-            text = as_section(
-                # as_key_value("Location #", location_info["id"]),
-                as_marked_list(
-                    as_key_value("Филиал", location_info["title"]),
-                    as_key_value("Адрес", location_info["address"]),
-                ),
-            )
-            logger.debug(f"Choosen location: {text.as_kwargs()}")
-
-            location_message = await query.message.edit_text(
-                text.as_html(), parse_mode=ParseMode.HTML
-            )
-            await state.update_data(location=text)
-            await state.update_data(location_id=location_id)
-
-            state_data = await state.get_data()
-
-            if state_data["daytime"] == "morning":
-                answer_text = (
-                    ReportHandlerMessages.MASTERS_QUANTITY + ReportMastersQuantity.MALE
+        if location:
+            try:
+                # Here we use aiogram.utils.formatting to format the text
+                # https://docs.aiogram.dev/en/latest/utils/formatting.html
+                text = as_section(
+                    # as_key_value("Location #", location_info["id"]),
+                    as_marked_list(
+                        as_key_value("Филиал", location.location_name),
+                        as_key_value("Адрес", location.address),
+                    ),
                 )
-                next_state = ReportMenuStates.entering_masters_quantity
-            else:
-                answer_text = (
-                    ReportHandlerMessages.CLIENTS_LOST + ReportClientsLost.MALE
+                logger.debug(f"Choosen location: {text.as_kwargs()}")
+
+                location_message = await query.message.edit_text(
+                    text.as_html(), parse_mode=ParseMode.HTML
                 )
-                next_state = ReportMenuStates.entering_clients_lost
+                await state.update_data(location=text)
+                await state.update_data(location_id=location_id)
+                await state.update_data(has_solarium=location.has_solarium)
 
-            answer = await query.message.answer(
-                answer_text, reply_markup=nav_keyboard()
-            )
-            await state.set_state(next_state)
+                state_data = await state.get_data()
 
-            # You can also use MarkdownV2:
-            # await query.message.edit_text(text.as_markdown(), parse_mode=ParseMode.MARKDOWN_V2)
+                if state_data["daytime"] == "morning":
+                    answer_text = (
+                        ReportHandlerMessages.MASTERS_QUANTITY
+                        + ReportMastersQuantity.MALE
+                    )
+                    next_state = ReportMenuStates.entering_masters_quantity
+                else:
+                    answer_text = (
+                        ReportHandlerMessages.CLIENTS_LOST + ReportClientsLost.MALE
+                    )
+                    next_state = ReportMenuStates.entering_clients_lost
+
+                answer = await query.message.answer(
+                    answer_text, reply_markup=nav_keyboard()
+                )
+                await state.set_state(next_state)
+
+                await state.update_data(
+                    prev_bot_message=answer,
+                    location_message=location_message,
+                )
+
+                # You can also use MarkdownV2:
+                # await query.message.edit_text(text.as_markdown(), parse_mode=ParseMode.MARKDOWN_V2)
+
+            except Exception as e:
+                logger.error(
+                    f"Error updating users:\n {str(e)} \n{(await state.get_state())}"
+                )
+                await query.message.edit_text(
+                    DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING
+                )
         else:
-            answer = await query.message.edit_text("Location not found!")
+            await query.message.edit_text("Location not found!")
             location_message = None
-
-        await state.update_data(
-            prev_bot_message=answer,
-            location_message=location_message,
-        )
 
     logger.debug(f"{await state.get_state()}, {await state.get_data()}")
 
@@ -167,7 +174,6 @@ async def choose_location(
 async def upload_solarium_counter(
     message: types.Message,
     state: FSMContext,
-    config: Config,
     album: list[Message] | None = None,
 ):
     if album:

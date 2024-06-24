@@ -4,7 +4,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types.message import Message
 from betterlogging import logging
 
-from tgbot.config import Config
 from tgbot.keyboards.reply import (
     NavButtons,
     nav_keyboard,
@@ -80,7 +79,6 @@ async def enter_total_clients(message: types.Message, state: FSMContext):
 async def upload_daily_excel(
     message: types.Message,
     state: FSMContext,
-    config: Config,
     album: list[Message] | None = None,
 ):
     state_data = await state.get_data()
@@ -101,14 +99,7 @@ async def upload_daily_excel(
             except TelegramBadRequest as e:
                 logger.warning(e.message)
 
-        has_solarium = next(
-            (
-                location["has_solarium"]
-                for location in config.misc.locations_list
-                if location["id"] == state_data["location_id"]
-            ),
-            None,
-        )
+        has_solarium = state_data.get('location_id')
         logger.debug(
             f"Location id: {state_data['location_id']}, has_solarium: {has_solarium}"
         )

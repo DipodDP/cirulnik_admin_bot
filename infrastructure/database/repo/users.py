@@ -108,7 +108,9 @@ class UserRepo(BaseRepo):
 
         return result.scalar()
 
-    async def get_all_user_locations_relationships(self, user_id: int):
+    async def get_all_user_locations_relationships(
+        self, user_id: int
+    ) -> Sequence[Location]:
         stmt = (
             select(Location, User.username)
             .join(User.locations)
@@ -118,7 +120,9 @@ class UserRepo(BaseRepo):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_users_by_location(self, location_id: int | None):  # TODO: if location_id is None return all owners
+    async def get_users_by_location(
+        self, location_id: int | None
+    ) -> Sequence[User]:  # TODO: if location_id is None return all owners
         select_stmt = (
             select(User)
             .join(UserLocation)
@@ -154,17 +158,15 @@ class UserRepo(BaseRepo):
 
         return result.scalars().all()
 
-    async def get_all_locations_by_user(self, user_id: int) -> Sequence[UserLocation]:
-        """
-        Retrieve all locations for a specific user, ordered by location_id.
-        :return: List of UserLocation objects.
-        """
-
-        select_stmt = (
-            select(UserLocation)
-            .where(UserLocation.user_id == user_id)
-            .order_by(UserLocation.location_id.asc())
-        )
-        result = await self.session.execute(select_stmt)
-
-        return result.scalars().all()
+    # async def get_all_locations_by_user(self, user_id: int) -> Sequence[UserLocation]:
+    #     """
+    #     Retrieve all locations for a specific user, ordered by location_id.
+    #     :return: List of UserLocation objects.
+    #     """
+    #     select_stmt = (
+    #         select(UserLocation)
+    #         .where(UserLocation.user_id == user_id)
+    #         .order_by(UserLocation.location_id.asc())
+    #     )
+    #     result = await self.session.execute(select_stmt)
+    #     return result.scalars().all()

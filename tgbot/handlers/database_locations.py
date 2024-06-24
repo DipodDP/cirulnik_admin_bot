@@ -8,14 +8,14 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.formatting import as_key_value, as_marked_list, as_section
 from betterlogging import logging
 
-from infrastructure.database.models.users import User
 from infrastructure.database.repo.requests import RequestsRepo
 from tgbot.filters.admin import AdminFilter
-from tgbot.keyboards.inline import LocationCallbackData, locations_keyboard
+from tgbot.keyboards.inline import (
+    UserCallbackData,
+)
 from tgbot.messages.handlers_msg import DatabaseHandlerMessages
 from tgbot.misc.states import AdminStates
 from tgbot.services.utils import delete_prev_message
-
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ async def update_locations(message: Message, state: FSMContext, repo: RequestsRe
         try:
             locations = json.loads(message.text)
             for location in locations:
-                logger.debug(f"Location: {location}")
+                logger.info(f"Location: {location}")
                 try:
                     await repo.locations.get_or_upsert_location(**location)
                     count += 1
@@ -78,55 +78,34 @@ async def update_locations(message: Message, state: FSMContext, repo: RequestsRe
     logger.debug(f"{(await state.get_state())}")
 
 
-# We can use F.data filter to filter callback queries by data field from CallbackQuery object
-# @database_locations_router.callback_query(F.data == "morning")
-@database_locations_router.message(Command("add"))
-async def adding_location(
-    message: Message, state: FSMContext, user_from_db: User, repo: RequestsRepo
-):
-    await message.delete()
-    await delete_prev_message(state)
-
-    locations = await repo.locations.get_all_locations()
-
-    # This method will send an answer to the message with the button, that user pressed
-    # Here query - is a CallbackQuery object, which contains message: Message object
-    if isinstance(message, Message):
-        answer = await message.answer(
-            DatabaseHandlerMessages.CHOOSE_LOCATION,
-            reply_markup=locations_keyboard(user_from_db.user_id, locations),
-        )
-    await state.set_state(AdminStates.updating_user_location)
-    await state.update_data(
-        prev_bot_message=answer,
-    )
-    logger.debug(f"{await state.get_state()}, {await state.get_data()}")
-    logger.debug(f"{await state.get_state()}, {await state.get_data()}")
-
-
 # To filter the callback data, that was created with CallbackData factory, you can use .filter() method
 @database_locations_router.callback_query(
-    AdminStates.updating_user_location, LocationCallbackData.filter()
+    AdminStates.adding_user_location, UserCallbackData.filter()
 )
-async def choose_location(
+async def add_location(
     query: CallbackQuery,
-    callback_data: LocationCallbackData,
+    callback_data: UserCallbackData,
     state: FSMContext,
     repo: RequestsRepo,
 ):
     # Firstly, always answer callback query (as Telegram API requires)
     await query.answer()
-    # await delete_prev_message(state)
+
+    logger.info(
+        f"Adding to user {callback_data.user_id}, location {callback_data.location_id}"
+    )
+
+    if not callback_data.user_id or not callback_data.location_id:
+        return
 
     # You can get the data from callback_data object as attributes
-    location = await repo.locations.get_location_by_id(callback_data.user_id)
+    location = await repo.locations.get_location_by_id(callback_data.location_id)
 
     if isinstance(query.message, Message):
         if location:
-            logger.debug(f"Adding to user {callback_data.user_id}, location {location}")
             try:
                 await repo.users.add_user_location(
-                    callback_data.user_id, location.location_id
+                    callback_data.user_id, callback_data.location_id
                 )
                 # Here we use aiogram.utils.formatting to format the text
                 # https://docs.aiogram.dev/en/latest/utils/formatting.html
@@ -149,11 +128,60 @@ async def choose_location(
                 await query.message.edit_text(
                     "\n".join([DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING, str(e)])
                 )
-            # await query.message.delete()
 
         else:
             await query.message.edit_text("Location not found!")
 
-        await state.clear()
+    logger.debug(f"{await state.get_state()}, {await state.get_data()}")
+
+
+@database_locations_router.callback_query(
+    AdminStates.deleting_user_location, UserCallbackData.filter()
+)
+async def del_location(
+    query: CallbackQuery,
+    callback_data: UserCallbackData,
+    state: FSMContext,
+    repo: RequestsRepo,
+):
+    await query.answer()
+
+    logger.info(
+        f"Deleting from user {callback_data.user_id}, location {callback_data.location_id}"
+    )
+
+    if not callback_data.user_id or not callback_data.location_id:
+        return
+
+    location = await repo.locations.get_location_by_id(callback_data.location_id)
+
+    if isinstance(query.message, Message) and all([callback_data.user_id, callback_data.location_id]):
+        if location:
+            try:
+                await repo.users.del_user_location(
+                    callback_data.user_id, callback_data.location_id
+                )
+                text = as_section(
+                    DatabaseHandlerMessages.SUCCESSFUL_UPDATING.value,
+                    as_marked_list(
+                        as_key_value("Филиал", location.location_name),
+                        as_key_value("Адрес", location.address),
+                    ),
+                )
+                logger.debug(f"Choosen location: {text.as_kwargs()}")
+
+                await query.message.edit_text(
+                    text.as_markdown(), parse_mode=ParseMode.MARKDOWN_V2
+                )
+            except Exception as e:
+                logger.error(
+                    f"Error updating locations:\n {str(e)} \n{(await state.get_state())}"
+                )
+                await query.message.edit_text(
+                    "\n".join([DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING, str(e)])
+                )
+
+        else:
+            await query.message.edit_text("Location not found!")
 
     logger.debug(f"{await state.get_state()}, {await state.get_data()}")

@@ -11,6 +11,7 @@ class AdminHandlerMessages(str, Enum):
 
 class DatabaseHandlerMessages(str, Enum):
     UPDATING_USER = "Пользователь:"
+    DELETING_LOCATION = "Выберите локацию, к которой необходимо удалить доступ"
     UPDATING_LOCATIONS = "Send locations in JSON format to update"
     SUCCESSFUL_UPDATING = "Updating is sucessful! Updated: "
     UNSUCCESSFUL_UPDATING = "Updating went wrong!\n"

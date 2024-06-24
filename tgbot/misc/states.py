@@ -32,6 +32,8 @@ class AdminStates(StatesGroup):
     updating_users = State()
     updating_locations = State()
     updating_user_location = State()
+    adding_user_location = State()
+    deleting_user_location = State()
 
 
 class ReportMenuStates(StatesGroup):

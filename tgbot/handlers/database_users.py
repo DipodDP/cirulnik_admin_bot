@@ -13,10 +13,9 @@ from tgbot.keyboards.inline import (
     locations_keyboard,
     users_update_keyboard,
 )
-from tgbot.messages.handlers_msg import AdminHandlerMessages, DatabaseHandlerMessages
+from tgbot.messages.handlers_msg import DatabaseHandlerMessages
 from tgbot.misc.states import AdminStates
 from tgbot.services.utils import delete_prev_message
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +24,55 @@ database_users_router.message.filter(AdminFilter())
 database_users_router.callback_query.filter(AdminFilter())
 
 
+# We can use F.data filter to filter callback queries by data field from CallbackQuery object
+# @database_locations_router.callback_query(F.data == "morning")
+@database_users_router.message(Command("add"))
+async def adding_location(message: Message, state: FSMContext, repo: RequestsRepo):
+    await message.delete()
+    await delete_prev_message(state)
+
+    locations = await repo.locations.get_all_locations()
+
+    # This method will send an answer to the message with the button, that user pressed
+    # Here query - is a CallbackQuery object, which contains message: Message object
+    if isinstance(message, Message):
+        answer = await message.answer(
+            DatabaseHandlerMessages.CHOOSE_LOCATION,
+            reply_markup=locations_keyboard(locations),
+        )
+    logger.info(f"Locations: {locations}")
+
+    await state.set_state(AdminStates.updating_user_location)
+    await state.update_data(
+        prev_bot_message=answer,
+    )
+    logger.debug(f"{await state.get_state()}, {await state.get_data()}")
+
+
+@database_users_router.callback_query(
+    AdminStates.updating_user_location, UserCallbackData.filter()
+)
+async def updating_location(
+    query: CallbackQuery,
+    callback_data: UserCallbackData,
+    state: FSMContext,
+    repo: RequestsRepo,
+):
+    users = await repo.users.get_all_users()
+
+    if isinstance(query.message, Message):
+        await query.message.edit_text(
+            DatabaseHandlerMessages.CHOOSE_USER,
+            reply_markup=users_update_keyboard(users, callback_data.location_id),
+        )
+    await state.set_state(AdminStates.adding_user_location)
+
+    logger.info(f"Choosen location: {callback_data.location_id}, users: {users}")
+    logger.debug(f"{await state.get_state()}, {await state.get_data()}")
+
+
 @database_users_router.message(Command("user"))
-async def adding_user(message: Message, state: FSMContext, repo: RequestsRepo):
+async def updating_user(message: Message, state: FSMContext, repo: RequestsRepo):
     await message.delete()
     await delete_prev_message(state)
 
@@ -47,7 +93,7 @@ async def adding_user(message: Message, state: FSMContext, repo: RequestsRepo):
 @database_users_router.callback_query(
     AdminStates.updating_users, UserCallbackData.filter()
 )
-async def choose_user(
+async def updating_user_location(
     query: CallbackQuery,
     callback_data: UserCallbackData,
     state: FSMContext,
@@ -55,12 +101,17 @@ async def choose_user(
 ):
     await query.answer()
 
-    user = await repo.users.get_user_by_id(callback_data.user_id)
+    logger.info(
+        f"Updating user {callback_data.user_id}, location {callback_data.location_id}"
+    )
 
-    if isinstance(query.message, Message):
+    if isinstance(query.message, Message) and callback_data.user_id:
+        user = await repo.users.get_user_by_id(callback_data.user_id)
         if user:
             try:
-                locations = await repo.locations.get_all_locations()
+                locations = await repo.users.get_all_user_locations_relationships(
+                    callback_data.user_id
+                )
                 text = as_section(
                     DatabaseHandlerMessages.UPDATING_USER.value,
                     as_marked_list(
@@ -76,9 +127,9 @@ async def choose_user(
                 await query.message.edit_text(
                     text.as_markdown(),
                     parse_mode=ParseMode.MARKDOWN_V2,
-                    reply_markup=locations_keyboard(user.user_id, locations),
+                    reply_markup=locations_keyboard(locations, user.user_id),
                 )
-                await state.set_state(AdminStates.updating_user_location)
+                await state.set_state(AdminStates.deleting_user_location)
 
             except Exception as e:
                 logger.error(
@@ -87,11 +138,8 @@ async def choose_user(
                 await query.message.edit_text(
                     "\n".join([DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING, str(e)])
                 )
-            # await query.message.delete()
 
         else:
             await query.message.edit_text("User not found!")
-
-        await state.clear()
 
     logger.debug(f"{await state.get_state()}, {await state.get_data()}")

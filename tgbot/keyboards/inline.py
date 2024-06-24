@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from enum import Enum
+
 from aiogram.filters.callback_data import CallbackData
 
 # from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -64,25 +65,14 @@ class UserCallbackData(CallbackData, prefix="user"):
     - In handlers you have to import this class and use it as a filter for callback query handlers, and then unpack callback_data parameter to get the data.
     """
 
-    user_id: int
-
-
-class LocationCallbackData(CallbackData, prefix="location"):
-    """
-    This class represents a CallbackData object for locations.
-
-    - When used in InlineKeyboardMarkup, you have to create an instance of this class, run .pack() method, and pass to callback_data parameter.
-
-    - When used in InlineKeyboardBuilder, you have to create an instance of this class and pass to callback_data parameter (without .pack() method).
-
-    - In handlers you have to import this class and use it as a filter for callback query handlers, and then unpack callback_data parameter to get the data.
-    """
-
-    user_id: int
+    user_id: int | None
     location_id: int | None
 
 
-def users_update_keyboard(users: Sequence[User]):
+def users_update_keyboard(
+    users: Sequence[User],
+    location_id: int | None = None,
+):
     # Here we use a list of users as a parameter (from simple_menu.py)
 
     keyboard = InlineKeyboardBuilder()
@@ -91,7 +81,9 @@ def users_update_keyboard(users: Sequence[User]):
             text=f"💇🏼‍♀️ {user.logged_as if user.logged_as else user.full_name}",
             # Here we use an instance of UserCallbackData class as callback_data parameter
             # user id is the field in UserCallbackData class, that we defined above
-            callback_data=UserCallbackData(user_id=user.user_id),
+            callback_data=UserCallbackData(
+                user_id=user.user_id, location_id=location_id
+            ),
         )
 
     keyboard.adjust(1)
@@ -99,12 +91,17 @@ def users_update_keyboard(users: Sequence[User]):
     return keyboard.as_markup()
 
 
-def locations_keyboard(user_id: int, locations: Sequence[Location]):
+def locations_keyboard(
+    locations: Sequence[Location],
+    user_id: int | None = None,
+):
     keyboard = InlineKeyboardBuilder()
     for location in locations:
         keyboard.button(
             text=f"✂️ {location.location_name}",
-            callback_data=LocationCallbackData(user_id=user_id, location_id=location.location_id),
+            callback_data=UserCallbackData(
+                user_id=user_id, location_id=location.location_id
+            ),
         )
 
     keyboard.adjust(1)
