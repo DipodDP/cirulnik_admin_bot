@@ -13,8 +13,9 @@ from tgbot.filters.admin import AdminFilter
 from tgbot.keyboards.inline import (
     UserCallbackData,
 )
-from tgbot.messages.handlers_msg import DatabaseHandlerMessages
-from tgbot.misc.states import AdminStates
+from tgbot.keyboards.reply import admin_menu_keyboard
+from tgbot.messages.handlers_msg import DatabaseHandlerMessages, UserHandlerMessages
+from tgbot.misc.states import AdminStates, CommonStates
 from tgbot.services.utils import delete_prev_message
 
 logger = logging.getLogger(__name__)
@@ -132,6 +133,17 @@ async def add_location(
         else:
             await query.message.edit_text("Location not found!")
 
+        state_data = await state.get_data()
+        await CommonStates().check_auth(state)
+        keyboard_message: Message | None = state_data.get('keyboard_message')
+        await keyboard_message.delete() if keyboard_message is not None else ...
+        keyboard_message = await query.message.answer(
+            UserHandlerMessages.COMPLETED, reply_markup=admin_menu_keyboard()
+        )
+        await state.update_data(
+            keyboard_message=keyboard_message, prev_bot_message=query.message
+        )
+
     logger.debug(f"{await state.get_state()}, {await state.get_data()}")
 
 
@@ -155,7 +167,9 @@ async def del_location(
 
     location = await repo.locations.get_location_by_id(callback_data.location_id)
 
-    if isinstance(query.message, Message) and all([callback_data.user_id, callback_data.location_id]):
+    if isinstance(query.message, Message) and all(
+        [callback_data.user_id, callback_data.location_id]
+    ):
         if location:
             try:
                 await repo.users.del_user_location(
@@ -183,5 +197,16 @@ async def del_location(
 
         else:
             await query.message.edit_text("Location not found!")
+
+        state_data = await state.get_data()
+        await CommonStates().check_auth(state)
+        keyboard_message: Message | None = state_data.get('keyboard_message')
+        await keyboard_message.delete() if keyboard_message is not None else ...
+        keyboard_message = await query.message.answer(
+            UserHandlerMessages.COMPLETED, reply_markup=admin_menu_keyboard()
+        )
+        await state.update_data(
+            keyboard_message=keyboard_message, prev_bot_message=query.message
+        )
 
     logger.debug(f"{await state.get_state()}, {await state.get_data()}")

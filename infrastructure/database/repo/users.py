@@ -94,8 +94,6 @@ class UserRepo(BaseRepo):
         select_stmt = (
             select(User)
             .where(User.active)
-            # .join(UserLocation, User.user_id == UserLocation.user_id)
-            # .join(Location, UserLocation.location_id == Location.location_id)
             .order_by(User.username.asc())
         )
         result = await self.session.execute(select_stmt)
@@ -104,6 +102,12 @@ class UserRepo(BaseRepo):
 
     async def get_user_logged_as(self, user_id: int):
         select_stmt = select(User.logged_as).where(User.user_id == user_id)
+        result = await self.session.execute(select_stmt)
+
+        return result.scalar()
+
+    async def get_user_is_owner(self, user_id: int):
+        select_stmt = select(User.is_owner).where(User.user_id == user_id)
         result = await self.session.execute(select_stmt)
 
         return result.scalar()

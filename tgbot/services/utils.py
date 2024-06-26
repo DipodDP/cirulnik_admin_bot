@@ -14,7 +14,9 @@ async def delete_prev_message(state: FSMContext):
         try:
             prev_bot_message: Message = user_data["prev_bot_message"]
             await prev_bot_message.delete()
+            keyboard_message: Message = user_data["keyboard_message"]
+            await keyboard_message.delete()
         except TelegramAPIError as e:
             logger.exception(e.message)
-        except AttributeError:
+        except KeyError:
             pass

@@ -3,7 +3,6 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from betterlogging import logging
 
-from tgbot.config import Config
 from tgbot.handlers.report_menu import choose_daytime
 from tgbot.handlers.report_morning import (
     enter_absent,
@@ -36,7 +35,7 @@ report_nav_buttons_router = Router()
 
 
 @report_nav_buttons_router.message(F.text.in_(NavButtons.BTN_BACK))
-async def btn_back(message: types.Message, state: FSMContext, config: Config):
+async def btn_back(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
 
     match current_state := await state.get_state():
@@ -176,9 +175,9 @@ async def btn_cancel(message: types.Message, state: FSMContext):
         location_message: types.Message = state_data["location_message"]
         await location_message.delete()
 
-    if "author" in state_data and "author_name" in state_data:
-        author, author_name = state_data["author"], state_data["author_name"]
-        await state.update_data(author=author, author_name=author_name)
+    await state.update_data(
+        author=state_data.get("author"), author_name=state_data.get("author_name")
+    )
 
     await CommonStates().check_auth(state)
 

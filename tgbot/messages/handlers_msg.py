@@ -4,19 +4,20 @@ from tgbot.keyboards.reply import NavButtons, ReplyButtons
 
 
 class AdminHandlerMessages(str, Enum):
-    GREETINGS = "Hello, admin! It's Cirulnik admin bot.\nPress /stop to stop bot\nPress /loc to update locations\nPress /user to update users\nPress /add to add location"
+    GREETINGS = "Hello, admin! It's Cirulnik admin bot.\nPress /stop to stop bot\nPress /loc to update locations"
     STOPPING = "Stopping bot..."
     ERROR = "Error!\n"
 
 
 class DatabaseHandlerMessages(str, Enum):
     UPDATING_USER = "Пользователь:"
-    DELETING_LOCATION = "Выберите локацию, к которой необходимо удалить доступ"
-    UPDATING_LOCATIONS = "Send locations in JSON format to update"
-    SUCCESSFUL_UPDATING = "Updating is sucessful! Updated: "
-    UNSUCCESSFUL_UPDATING = "Updating went wrong!\n"
+    DELETING_LOCATION = "❌ Удаление доступа"
+    ADDING_LOCATION = "✅ Добавление доступа"
+    UPDATING_LOCATIONS = "Отправьте список локаций в JSON формате для обновления"
+    SUCCESSFUL_UPDATING = "Обновлено: "
+    UNSUCCESSFUL_UPDATING = "Ошибка обновления!\n"
     CHOOSE_USER = "Выберите пользователя:"
-    CHOOSE_LOCATION = "Выберите салон, куда добавить или удалить менеджера:"
+    CHOOSE_LOCATION = "Выберите локацию:"
 
 
 class UserHandlerMessages(str, Enum):
@@ -24,6 +25,8 @@ class UserHandlerMessages(str, Enum):
     ASK_USERNAME = "Ошибка, не указано имя пользователя Telegram!\n\nПожалуйста, укажите `Имя пользователя` в настройках аккаунта Telegram для продолжения работы с ботом"
     HELP = f'Нажмите команду /start и кнопку "{ReplyButtons.BTN_SEND_REPORT.value}"'
     AUTHORIZATION = "Ввведите свое имя и фамилию"
+    COMPLETED = "Действие завершено!"
+    CANCEL = "Действие отменено!"
     ERROR = "Что-то пошло не так! Пожалуйста, попробуйте позже"
 
 
