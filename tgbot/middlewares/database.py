@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Any, Awaitable
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message, TelegramObject
 
 from infrastructure.database.repo.requests import RequestsRepo
 
@@ -12,23 +12,40 @@ class DatabaseMiddleware(BaseMiddleware):
 
     async def __call__(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-        event: Message,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
+        if not isinstance(event, Message | CallbackQuery):
+            print(
+                "{} used not for Message, but for {}".format(
+                    self.__class__.__name__, type(event).__name__
+                ),
+            )
+            return await handler(event, data)
+
         async with self.session_pool() as session:
             repo = RequestsRepo(session)
+            event_from_user = data.get("event_from_user")
 
-            user = await repo.users.get_or_create_user(
-                event.from_user.id,
-                event.from_user.full_name,
-                event.from_user.language_code,
-                event.from_user.username
-            )
+            try:
+                user = (
+                    await repo.users.get_or_upsert_user(
+                        event_from_user.id,
+                        event_from_user.username,
+                        event_from_user.full_name,
+                        event_from_user.language_code,
+                    )
+                    if event_from_user is not None
+                    else None
+                )
 
-            data["session"] = session
-            data["repo"] = repo
-            data["user"] = user
+                # access to session in handlers: repo.session.execute(stmt)
+                data["repo"] = repo
+                data["user_from_db"] = user
+
+            except Exception as e:
+                data["db_error"] = e
 
             result = await handler(event, data)
         return result

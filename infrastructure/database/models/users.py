@@ -1,18 +1,16 @@
 from typing import Optional
 
-from sqlalchemy import String
-from sqlalchemy import text, BIGINT, Boolean, true
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy import BIGINT, Boolean, String, false, text, true
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base, TimestampMixin, TableNameMixin
+from infrastructure.database.models.locations import UserLocation
+
+from .base import Base, TableNameMixin, TimestampMixin, str_128
 
 
 class User(Base, TimestampMixin, TableNameMixin):
     """
-    This class represents a User in the application.
-    If you want to learn more about SQLAlchemy and Alembic, you can check out the following link to my course:
-    https://www.udemy.com/course/sqlalchemy-alembic-bootcamp/?referralCode=E9099C5B5109EB747126
+    Represents a User in the application.
 
     Attributes:
         user_id (Mapped[int]): The unique identifier of the user.
@@ -31,11 +29,16 @@ class User(Base, TimestampMixin, TableNameMixin):
         Inherits methods from Base, TimestampMixin, and TableNameMixin classes, which provide additional functionality.
 
     """
+
     user_id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=False)
-    username: Mapped[Optional[str]] = mapped_column(String(128))
-    full_name: Mapped[str] = mapped_column(String(128))
+    username: Mapped[Optional[str_128]]
+    full_name: Mapped[str_128]
+    language: Mapped[str] = mapped_column(String(10), server_default=text("en"))
     active: Mapped[bool] = mapped_column(Boolean, server_default=true())
-    language: Mapped[str] = mapped_column(String(10), server_default=text("'en'"))
+    logged_as: Mapped[Optional[str_128]]
+    is_owner: Mapped[bool] = mapped_column(Boolean, server_default=false())
+
+    locations: Mapped[list["UserLocation"]] = relationship(back_populates="user")
 
     def __repr__(self):
         return f"<User {self.user_id} {self.username} {self.full_name}>"

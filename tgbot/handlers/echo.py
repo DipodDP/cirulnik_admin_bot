@@ -25,7 +25,7 @@ async def bot_echo_all_admin(message: types.Message, state: FSMContext):
         "Message text:",
         hcode(message.text),
     ]
-    await message.answer("\n".join(text if text else ['-- No text --']))
+    await message.answer("\n".join(text if text else ["-- No text --"]))
 
 
 @echo_router.message()
@@ -33,5 +33,5 @@ async def bot_echo(message: types.Message, state: FSMContext):
     await message.delete()
     await delete_prev_message(state)
     text = [EchoMessages.WRONG, "Message:", message.text]
-    answer = await message.answer("\n".join(text if text else ['-- No text --']))
+    answer = await message.answer("\n".join(text if text else ["-- No text --"]))
     await state.update_data(prev_bot_message=answer)

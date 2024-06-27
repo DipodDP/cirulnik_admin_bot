@@ -1,0 +1,34 @@
+https://app.quickdatabasediagrams.com/
+# Modify this code to update the DB schema diagram.
+# To reset the sample schema, replace everything with
+# two dots ('..' - without quotes).
+
+users
+-
+user_id PK int
+username NULL varchar(255)
+full_name varchar(255)
+active bool
+language varchar(50)
+logged_as NULL varchar(255)
+role_id PK int FK >- roles.role_id
+
+roles
+-
+role_id PK int autoincrement
+role_name varchar(255) unique
+can_send_report bool
+can_manage_admins bool
+
+locations
+-
+location_id PK int
+location_name varchar(255)
+address text
+has_solarium bool
+
+users_locations
+-
+user_id PK int, FK >- users.user_id
+location_id PK int, FK >- locations.location_id
+

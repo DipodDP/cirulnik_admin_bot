@@ -16,7 +16,7 @@ async def send_message(
     disable_notification: bool = False,
     reply_markup: InlineKeyboardMarkup | None = None,
     parse_mode: ParseMode | None = None,
-    media: list[MediaType] = []
+    media: list[MediaType] = [],
 ) -> bool:
     """
     Safe messages sender
@@ -37,7 +37,7 @@ async def send_message(
                 text,
                 disable_notification=disable_notification,
                 reply_markup=reply_markup,
-                parse_mode=parse_mode
+                parse_mode=parse_mode,
             )
         else:
             await bot.send_media_group(
@@ -46,7 +46,7 @@ async def send_message(
                 disable_notification=disable_notification,
             )
     except exceptions.TelegramBadRequest as e:
-        logging.error("Telegram server says - Bad Request: chat not found")
+        logging.error(f"Telegram server says - {e}")
     except exceptions.TelegramForbiddenError:
         logging.error(f"Target [ID:{user_id}]: got TelegramForbiddenError")
     except exceptions.TelegramRetryAfter as e:
@@ -67,12 +67,12 @@ async def send_message(
 
 async def broadcast(
     bot: Bot,
-    users: list[Union[str, int]],
+    users: list[int],
     text: str,
     disable_notification: bool = False,
     reply_markup: InlineKeyboardMarkup | None = None,
     parse_mode: ParseMode | None = None,
-    media = []
+    media=[],
 ) -> int:
     """
     Simple broadcaster.
@@ -85,13 +85,21 @@ async def broadcast(
     :return: Count of messages.
     """
 
-    logging.info(f"-------Report Content-------\nReport text:\n{text}\n----------\nReport media:\n{media}")
+    logging.info(
+        f"\n-------Broadcast Content-------\nBroadcasting text...:\n{text}\n----------\nBroadcasting media...:\n{media}"
+    )
 
     count = 0
     try:
         for user_id in users:
             if await send_message(
-                bot, user_id, text, disable_notification, reply_markup, parse_mode, media
+                bot,
+                user_id,
+                text,
+                disable_notification,
+                reply_markup,
+                parse_mode,
+                media,
             ):
                 count += 1
             await asyncio.sleep(
@@ -120,7 +128,9 @@ async def broadcast_messages_copies(
     try:
         for user_id in users:
             for message in messages:
-                if await message.send_copy(user_id, disable_notification=disable_notification):
+                if await message.send_copy(
+                    user_id, disable_notification=disable_notification
+                ):
                     count += 1
             await asyncio.sleep(
                 0.05

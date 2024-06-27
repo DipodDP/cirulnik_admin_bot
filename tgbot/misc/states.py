@@ -15,12 +15,25 @@ class CommonStates(StatesGroup):
         :return: bool
         """
         state_data = await state.get_data()
-        if 'author' in state_data:
+        if all(
+            [
+                state_data.get("author") is not None,
+                state_data.get("author_name") is not None,
+            ]
+        ):
             await state.set_state(self.authorized)
             return True
-        else: 
+        else:
             await state.set_state(self.unauthorized)
             return False
+
+
+class AdminStates(StatesGroup):
+    updating_users = State()
+    updating_locations = State()
+    updating_user_location = State()
+    adding_user_location = State()
+    deleting_user_location = State()
 
 
 class ReportMenuStates(StatesGroup):
