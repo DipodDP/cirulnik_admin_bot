@@ -97,7 +97,7 @@ async def upload_open_reciept(
 
     state_data = await state.get_data()
 
-    has_solarium = state_data.get('location_id')
+    has_solarium = state_data.get('has_solarium')
     logger.debug(
         f"Location id: {state_data['location_id']}, has_solarium: {has_solarium}"
     )

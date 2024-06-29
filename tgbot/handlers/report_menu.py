@@ -16,6 +16,7 @@ from tgbot.keyboards.inline import (
 from tgbot.keyboards.reply import (
     NavButtons,
     ReplyButtons,
+    admin_menu_keyboard,
     nav_keyboard,
     user_menu_keyboard,
     send_keyboard,
@@ -206,7 +207,7 @@ async def upload_solarium_counter(
     F.text == NavButtons.BTN_SEND, ReportMenuStates.completing_report
 )
 async def complete_report(
-    message: types.Message, state: FSMContext, repo: RequestsRepo
+    message: types.Message, state: FSMContext, user_from_db: User, repo: RequestsRepo
 ):
     await message.delete()
     await delete_prev_message(state)
@@ -218,13 +219,6 @@ async def complete_report(
     await state.clear()
     await state.update_data(author=author, author_name=author_name)
     await CommonStates().check_auth(state)
-
-    await message.answer(
-        ReportHandlerMessages.REPORT_MORNING_COMPLETED
-        if state_data["daytime"] == "morning"
-        else ReportHandlerMessages.REPORT_EVENING_COMPLETED,
-        reply_markup=user_menu_keyboard(),
-    )
 
     location_id: int | None = state_data.get("location_id")
     users = await repo.users.get_users_by_location(location_id)
@@ -240,3 +234,12 @@ async def complete_report(
         text = report.construct_evening_report()
         media = report.build_album()
         await on_report(message.bot, [user.user_id for user in users], text, media)
+
+    await message.answer(
+        ReportHandlerMessages.REPORT_MORNING_COMPLETED
+        if state_data["daytime"] == "morning"
+        else ReportHandlerMessages.REPORT_EVENING_COMPLETED,
+        reply_markup=admin_menu_keyboard()
+        if user_from_db.is_owner
+        else user_menu_keyboard(),
+    )
