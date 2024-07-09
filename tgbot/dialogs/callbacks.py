@@ -1,4 +1,3 @@
-from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.formatting import as_key_value, as_marked_list, as_section
@@ -7,7 +6,7 @@ from aiogram_dialog.widgets.kbd import Button, Select
 from betterlogging import logging
 
 from infrastructure.database.repo.requests import RequestsRepo
-from tgbot.dialogs.states import ActionSelectionStates
+from tgbot.dialogs.states import ActionSelectionStates, UsersMenuStates
 from tgbot.keyboards.reply import admin_menu_keyboard
 from tgbot.messages.handlers_msg import DatabaseHandlerMessages, UserHandlerMessages
 
@@ -28,6 +27,7 @@ async def set_prev_message(
         UserHandlerMessages.CANCEL, reply_markup=admin_menu_keyboard()
     )
     await state.update_data(prev_bot_message=answer)
+    await dialog_manager.done()
 
 
 async def selected_user(
@@ -40,10 +40,21 @@ async def selected_user(
     # event = dialog_manager.event
     # middleware_data = dialog_manager.middleware_data
     # start_data = dialog_manager.start_data
-
-    await dialog_manager.switch_to(ActionSelectionStates.location_selection)
+    logger.debug(f"Dialog data: {dialog_manager.dialog_data}")
+    await dialog_manager.switch_to(UsersMenuStates.users_actions)
     # or
     # await dialog_manager.next()
+
+
+async def access_deletion(
+    callback_query: CallbackQuery,
+    widget: Button,
+    dialog_manager: DialogManager,
+):
+    logger.debug(f"Dialog data: {dialog_manager.dialog_data}")
+    await dialog_manager.start(
+        ActionSelectionStates.location_selection, data=dialog_manager.dialog_data
+    )
 
 
 async def selected_location(
@@ -53,10 +64,9 @@ async def selected_location(
     item_id: str,
     # repo: RequestsRepo,
 ):
-    # dialog_manager.dialog_data["location_id"] = item_id
     middleware_data = dialog_manager.middleware_data
     repo: RequestsRepo | None = middleware_data.get("repo")
-    user_id = dialog_manager.dialog_data.get("user_id")
+    user_id = dialog_manager.start_data.get("user_id")
     location_id = int(item_id)
 
     logger.info(f"Deleting from user {user_id}, location {location_id}")
@@ -78,24 +88,31 @@ async def selected_location(
                     ),
                 )
                 logger.debug(f"Choosen location: {text.as_kwargs()}")
-                await callback_query.message.edit_text(
-                    text.as_markdown(), parse_mode=ParseMode.MARKDOWN_V2
-                )
+                text = text.as_markdown()
             except Exception as e:
                 logger.error(f"Error updating locations:\n {str(e)}")
-                await callback_query.message.edit_text(
-                    "\n".join([DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING, str(e)])
+                text = "\n".join(
+                    [DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING, str(e)]
                 )
         else:
-            await callback_query.message.edit_text("Location not found!")
+            text = "Location not found!"
 
-        # await dialog_manager.done()
-    await dialog_manager.switch_to(ActionSelectionStates.done)
+        dialog_manager.dialog_data["result_text"] = text
+        await dialog_manager.switch_to(ActionSelectionStates.done)
 
 
-async def done_adding_location(
+async def action_done(
     callback_query: CallbackQuery,
     widget: Button,
     dialog_manager: DialogManager,
 ):
+    if not isinstance(callback_query.message, Message):
+        return
+    data = dialog_manager.middleware_data
+    state: FSMContext = data["state"]
+    await callback_query.message.delete()
+    answer = await callback_query.message.answer(
+        UserHandlerMessages.COMPLETED, reply_markup=admin_menu_keyboard()
+    )
+    await state.update_data(prev_bot_message=answer)
     await dialog_manager.done()

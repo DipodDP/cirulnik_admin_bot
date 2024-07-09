@@ -88,4 +88,4 @@ async def updating_user(
     await message.delete()
     await delete_prev_message(state)
 
-    await dialog_manager.start(UsersMenuStates.users, mode=StartMode.RESET_STACK)
+    await dialog_manager.start(UsersMenuStates.user_selection, mode=StartMode.RESET_STACK)
