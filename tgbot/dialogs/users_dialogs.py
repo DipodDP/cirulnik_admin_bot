@@ -15,6 +15,7 @@ from tgbot.dialogs.callbacks import (
     selected_location,
     selected_user,
     set_prev_message,
+    user_deletion,
 )
 from tgbot.dialogs.getters import get_selected_user, get_user_locations, get_users
 from tgbot.dialogs.states import (
@@ -29,13 +30,20 @@ async def close_dialog(_, __, dialog_manager: DialogManager, **kwargs):
     await dialog_manager.done()
 
 
+async def put_start_data_in_dialog(start_data: dict, dialog_manager: DialogManager):
+    for key in start_data.keys():
+        dialog_manager.dialog_data[key] = start_data[key]
+    # print(start_data, dialog_manager.dialog_data)
+
+
 users_menu_dialog = Dialog(
     Window(
         Const(UsersDialogsMessages.CHOOSE_USER),
         ScrollingGroup(
             Select(
                 id="users_select",
-                items="users", item_id_getter=lambda item: item["user_id"],
+                items="users",
+                item_id_getter=lambda item: item["user_id"],
                 on_click=selected_user,
                 text=Format("💇🏼‍♀️ {item[name]}"),
             ),
@@ -52,14 +60,14 @@ users_menu_dialog = Dialog(
         Const(UsersDialogsMessages.CHOOSE_ACTION),
         Column(
             Button(
-                Const(UsersDialogsMessages.USER_DELETING),
+                Const(UsersDialogsMessages.USER_DELETION),
                 id="user_deleting",
-                on_click=access_deletion
+                on_click=user_deletion,
             ),
             Button(
                 Const(UsersDialogsMessages.ACCESS_DELETING),
                 id="access_deleting",
-                on_click=access_deletion
+                on_click=access_deletion,
             ),
         ),
         Cancel(Const(NavButtons.BTN_CANCEL), on_click=set_prev_message),
@@ -95,5 +103,6 @@ accsess_deletion_dialog = Dialog(
         state=ActionSelectionStates.done,
         parse_mode=ParseMode.MARKDOWN_V2,
     ),
+    on_start=put_start_data_in_dialog,
     on_process_result=close_dialog,
 )

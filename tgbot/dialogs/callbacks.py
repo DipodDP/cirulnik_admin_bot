@@ -46,6 +46,46 @@ async def selected_user(
     # await dialog_manager.next()
 
 
+async def user_deletion(
+    callback_query: CallbackQuery,
+    widget: Button,
+    dialog_manager: DialogManager,
+):
+    middleware_data = dialog_manager.middleware_data
+    repo: RequestsRepo | None = middleware_data.get("repo")
+    user_id: int | None = dialog_manager.dialog_data.get("user_id")
+
+    logger.info(f"Deleting user {user_id}")
+
+    if not user_id or repo is None:
+        await dialog_manager.done()
+        return
+
+    if isinstance(callback_query.message, Message) and user_id:
+        try:
+            user = await repo.users.del_user_by_id(user_id)
+            text = as_section(
+                DatabaseHandlerMessages.SUCCESSFUL_UPDATING.value,
+                as_marked_list(
+                    as_key_value("Удален", "@" + user.username),
+                ),
+            )
+            logger.debug(f"Deleted user: {text.as_kwargs()}")
+            text = text.as_markdown()
+        except Exception as e:
+            logger.error(f"Error updating user:\n {str(e)}")
+            text = DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING
+    else:
+        text = "User not found\!"
+
+    dialog_manager.dialog_data["result_text"] = text
+
+    logger.debug(f"Dialog data: {dialog_manager.dialog_data}")
+    await dialog_manager.start(
+        ActionSelectionStates.done, data=dialog_manager.dialog_data
+    )
+
+
 async def access_deletion(
     callback_query: CallbackQuery,
     widget: Button,
@@ -91,11 +131,9 @@ async def selected_location(
                 text = text.as_markdown()
             except Exception as e:
                 logger.error(f"Error updating locations:\n {str(e)}")
-                text = "\n".join(
-                    [DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING, str(e)]
-                )
+                text = DatabaseHandlerMessages.UNSUCCESSFUL_UPDATING
         else:
-            text = "Location not found!"
+            text = "Location not found\!"
 
         dialog_manager.dialog_data["result_text"] = text
         await dialog_manager.switch_to(ActionSelectionStates.done)

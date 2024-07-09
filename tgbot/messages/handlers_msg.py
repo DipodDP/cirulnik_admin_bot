@@ -15,7 +15,7 @@ class DatabaseHandlerMessages(str, Enum):
     ADDING_LOCATION = "✅ Добавление доступа"
     UPDATING_LOCATIONS = "Отправьте список локаций в JSON формате для обновления"
     SUCCESSFUL_UPDATING = "Обновлено: "
-    UNSUCCESSFUL_UPDATING = "Ошибка обновления!\n"
+    UNSUCCESSFUL_UPDATING = "Ошибка обновления\!\n"
     CHOOSE_USER = "Выберите пользователя:"
     CHOOSE_LOCATION = "Выберите локацию:"
 
