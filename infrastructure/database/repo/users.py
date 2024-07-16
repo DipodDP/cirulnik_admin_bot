@@ -88,11 +88,20 @@ class UserRepo(BaseRepo):
         return result.scalars().first()
 
     async def del_user_by_id(self, user_id: int):
-        delete_stmt = delete(User).where(User.user_id == user_id).returning(User)
-        result = await self.session.execute(delete_stmt)
-        await self.session.commit()
+        # Step 1: Retrieve the rows to be deleted
+        select_stmt = select(User).where(User.user_id == user_id)
+        result = await self.session.execute(select_stmt)
+        user_to_delete = result.scalars().first()
 
-        return result.scalars().first()
+        if user_to_delete:
+            # Step 2: Delete the rows
+            delete_stmt = delete(User).where(User.user_id == user_id)
+            await self.session.execute(delete_stmt)
+            await self.session.commit()
+
+            return user_to_delete
+        else:
+            return None
 
     async def get_all_users(self):
         select_stmt = (
