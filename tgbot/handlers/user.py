@@ -3,13 +3,12 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from betterlogging import logging
+
 from infrastructure.database.repo.requests import RequestsRepo
 from tgbot.keyboards.reply import user_menu_keyboard
-
 from tgbot.messages.handlers_msg import UserHandlerMessages
 from tgbot.misc.states import CommonStates
-from tgbot.services.utils import delete_prev_message
-
+from tgbot.services.utils import delete_location_message, delete_prev_message
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +29,7 @@ async def user_start(
         await state.update_data(author_name=None)
 
     state_data = await state.get_data()
-    location_message: Message | None = state_data.get("location_message")
-    if location_message:
-        await location_message.delete()
+    await delete_location_message(state)
 
     if auth := await CommonStates().check_auth(state):
         logger.info(f'Auth for {state_data.get("author_name")} has been passed')

@@ -1,14 +1,9 @@
-from aiogram import types, Router, F
+from aiogram import F, Router, types
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from betterlogging import logging
 
-from tgbot.handlers.report_menu import choose_daytime
-from tgbot.handlers.report_morning import (
-    enter_absent,
-    enter_latecomers,
-    enter_masters_quantity,
-)
+from infrastructure.database.models.users import User
 from tgbot.handlers.report_evening import (
     enter_clients_lost,
     enter_day_resume,
@@ -18,7 +13,12 @@ from tgbot.handlers.report_evening import (
     upload_daily_excel,
     upload_z_report,
 )
-
+from tgbot.handlers.report_menu import choose_daytime
+from tgbot.handlers.report_morning import (
+    enter_absent,
+    enter_latecomers,
+    enter_masters_quantity,
+)
 from tgbot.keyboards.reply import NavButtons, nav_keyboard, user_menu_keyboard
 from tgbot.messages.handlers_msg import (
     ReportClientsLost,
@@ -26,8 +26,7 @@ from tgbot.messages.handlers_msg import (
     ReportMastersQuantity,
 )
 from tgbot.misc.states import CommonStates, ReportMenuStates
-from tgbot.services.utils import delete_prev_message
-
+from tgbot.services.utils import delete_location_message, delete_prev_message
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +34,13 @@ report_nav_buttons_router = Router()
 
 
 @report_nav_buttons_router.message(F.text.in_(NavButtons.BTN_BACK))
-async def btn_back(message: types.Message, state: FSMContext):
+async def btn_back(message: types.Message, state: FSMContext, user_from_db: User):
     state_data = await state.get_data()
 
     match current_state := await state.get_state():
         # Morning report
         case "ReportMenuStates:entering_masters_quantity":
-            if "location_message" in state_data:
-                location_message: types.Message = state_data["location_message"]
-                await location_message.delete()
+            await delete_location_message(state)
             await state.set_state(ReportMenuStates.choosing_location)
             await state.update_data(masters_quantity={})
             await choose_daytime(message, state)
@@ -73,13 +70,10 @@ async def btn_back(message: types.Message, state: FSMContext):
 
         # Evening report
         case "ReportMenuStates:entering_clients_lost":
-            data = await state.get_data()
-            if "location_message" in data:
-                location_message: types.Message = data["location_message"]
-                await location_message.delete()
+            await delete_location_message(state)
             await state.set_state(ReportMenuStates.choosing_location)
             await state.update_data(clients_lost={})
-            await choose_daytime(message, state)
+            await choose_daytime(message, state, user_from_db)
             logger.debug(f"Back to state: {await state.get_state()}")
 
         case "ReportMenuStates:entering_total_clients":
@@ -169,11 +163,9 @@ async def btn_back(message: types.Message, state: FSMContext):
 async def btn_cancel(message: types.Message, state: FSMContext):
     await message.delete()
     await delete_prev_message(state)
+    await delete_location_message(state)
     state_data = await state.get_data()
     await state.clear()
-    if "location_message" in state_data:
-        location_message: types.Message = state_data["location_message"]
-        await location_message.delete()
 
     await state.update_data(
         author=state_data.get("author"), author_name=state_data.get("author_name")

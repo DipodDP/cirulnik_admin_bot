@@ -27,7 +27,6 @@ async def set_prev_message(
         UserHandlerMessages.CANCEL, reply_markup=admin_menu_keyboard()
     )
     await state.update_data(prev_bot_message=answer)
-    await dialog_manager.done()
 
 
 async def selected_user(
