@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
-import json
+from typing import Optional
 
 from environs import Env
 from sqlalchemy.engine.url import URL
@@ -171,7 +170,6 @@ class Miscellaneous:
         A string used to hold other various parameters as required (default is None).
     """
 
-    locations_list: list[dict[str, str]]
     other_params: str | None = None
 
     @staticmethod
@@ -179,22 +177,8 @@ class Miscellaneous:
         """
         Creates the Miscellaneous object from environment variables.
         """
-        locations_str: str = env.str("LOCATIONS")
 
-        locations_list = []
-
-        if not locations_str:
-            print("locations_str is empty")
-            # Handle the empty string case here
-        else:
-            try:
-                locations_list = json.loads(locations_str)
-            except json.JSONDecodeError:
-                print(locations_str)
-                print("Invalid JSON in locations_str")
-                # Handle the invalid JSON case here
-
-        return Miscellaneous(locations_list=locations_list)
+        return Miscellaneous()
 
 
 @dataclass

@@ -43,8 +43,8 @@ def user_menu_keyboard():
 def admin_menu_keyboard():
     keyboard = ReplyKeyboardBuilder()
     keyboard.button(text=ReplyButtons.BTN_SEND_REPORT)
+    keyboard.button(text=ReplyButtons.BTN_UPDATE_USERS)
     keyboard.button(text=ReplyButtons.BTN_UPDATE_LOCATIONS)
-    keyboard.button(text=ReplyButtons.BTN_DELETE_ACCESS)
     keyboard.adjust(1)
     return keyboard.as_markup(
         input_field_placeholder=f"Нажмите на кнопку {ReplyButtons.BTN_SEND_REPORT.value}",
@@ -59,6 +59,16 @@ def cancel_keyboard():
     keyboard.adjust(1, 2)
     return keyboard.as_markup(
         input_field_placeholder=f"Нажмите {NavButtons.BTN_CANCEL.value} для отмены",
+        resize_keyboard=True,
+    )
+
+
+def ok_keyboard():
+    keyboard = ReplyKeyboardBuilder()
+    keyboard.button(text=NavButtons.BTN_OK)
+    keyboard.adjust()
+    return keyboard.as_markup(
+        input_field_placeholder=f"Нажмите {NavButtons.BTN_OK.value}",
         resize_keyboard=True,
     )
 

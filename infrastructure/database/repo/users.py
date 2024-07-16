@@ -87,6 +87,13 @@ class UserRepo(BaseRepo):
 
         return result.scalars().first()
 
+    async def del_user_by_id(self, user_id: int):
+        delete_stmt = delete(User).where(User.user_id == user_id).returning(User)
+        result = await self.session.execute(delete_stmt)
+        await self.session.commit()
+
+        return result.scalars().first()
+
     async def get_all_users(self):
         select_stmt = (
             select(User)

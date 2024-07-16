@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from aiogram_dialog import setup_dialogs
 import betterlogging as bl
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
@@ -11,6 +12,7 @@ from infrastructure.database.setup import create_engine, create_session_pool
 
 # from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 from tgbot.config import Config, load_config
+from tgbot.dialogs import dialogs
 from tgbot.handlers import routers_list
 from tgbot.middlewares.albums_collector import AlbumsMiddleware
 from tgbot.middlewares.config import ConfigMiddleware
@@ -56,7 +58,7 @@ def setup_logging(log_level: str):
     Example usage:
         setup_logging()
     """
-    # bl.basic_colorized_config(level=log_level)
+    bl.basic_colorized_config(level=log_level)
     logging.basicConfig(level=log_level)
 
     logging.basicConfig(
@@ -107,6 +109,10 @@ async def main():
     dp = Dispatcher(storage=storage)
 
     dp.include_routers(*routers_list)
+
+    dp.include_routers(*dialogs)
+    setup_dialogs(dp)
+
 
     session_pool = None
     if config.db:
