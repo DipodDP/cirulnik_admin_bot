@@ -78,7 +78,7 @@ class ReportBuilder:
                 "\n".join([f"{k} {v}" for k, v in self.clients_lost.items()]),
                 Bold("\n\nВсего клиентов:\n"),
                 self.total_clients,
-                Bold("\n\nСумма СБП: \n"),
+                Bold("\n\nКоличество гель-лаков на конец смены: \n"),
                 self.sbp_sum,
                 Bold("\n\nКак прошел день: \n"),
                 self.day_resume,

@@ -1,11 +1,11 @@
 import asyncio
 import logging
 
-from aiogram_dialog import setup_dialogs
 import betterlogging as bl
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram_dialog import setup_dialogs
 
 from infrastructure.database.models import *
 from infrastructure.database.setup import create_engine, create_session_pool
@@ -21,7 +21,9 @@ from tgbot.misc.notify_admins import on_down, on_startup
 from tgbot.misc.setting_comands import set_all_default_commands
 
 
-def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=None):
+def register_global_middlewares(
+    dp: Dispatcher, config: Config, session_pool=None
+):
     """
     Register global middlewares for the given dispatcher.
     Global middlewares here are the ones that are applied to all the handlers (you specify the type of update)
@@ -63,10 +65,10 @@ def setup_logging(log_level: str):
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s",
+        format='%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
     )
     logger = logging.getLogger(__name__)
-    logger.info("Starting bot")
+    logger.info('Starting bot')
 
 
 def get_storage(config):
@@ -91,7 +93,7 @@ def get_storage(config):
 
 
 async def main():
-    config = load_config(".env")
+    config = load_config('.env')
     log_level = config.tg_bot.console_log_level
 
     setup_logging(log_level)
@@ -103,7 +105,9 @@ async def main():
     # Proxy URL with credentials:
     # "protocol://user:password@host:port"
     session = (
-        AiohttpSession(config.tg_bot.proxy_url) if config.tg_bot.proxy_url else None
+        AiohttpSession(config.tg_bot.proxy_url)
+        if config.tg_bot.proxy_url
+        else None
     )
     bot = Bot(token=config.tg_bot.token, session=session)
     dp = Dispatcher(storage=storage)
@@ -113,13 +117,9 @@ async def main():
     dp.include_routers(*dialogs)
     setup_dialogs(dp)
 
-
     session_pool = None
     if config.db:
-        engine = create_engine(
-                config.db,
-                echo=(log_level == 'DEBUG')
-        )
+        engine = create_engine(config.db, echo=(log_level == 'DEBUG'))
         session_pool = create_session_pool(engine)
 
     register_global_middlewares(dp, config, session_pool)
@@ -140,9 +140,9 @@ async def main():
         await dp.storage.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         asyncio.run(main())
         # asyncio.gather(main(), return_exceptions=True).cancel()
     except (KeyboardInterrupt, SystemExit):
-        logging.warning("Bot is stopped!")
+        logging.warning('Bot is stopped!')
