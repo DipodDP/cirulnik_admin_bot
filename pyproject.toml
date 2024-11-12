@@ -19,6 +19,7 @@ sqlalchemy = "^2.0.29"
 alembic = "^1.13.1"
 aiomysql = "^0.2.0"
 aiogram-dialog = "^2.1.0"
+requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 psycopg2-binary = "^2.9.9"
