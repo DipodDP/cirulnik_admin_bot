@@ -85,7 +85,7 @@ async def broadcast(
     :return: Count of messages.
     """
 
-    logging.info(
+    logging.debug(
         f"\n-------Broadcast Content-------\nBroadcasting text...:\n{text}\n----------\nBroadcasting media...:\n{media}"
     )
 

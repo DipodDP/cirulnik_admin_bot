@@ -61,7 +61,7 @@ class DbConfig:
         """
         Creates the DbConfig object from environment variables.
         """
-        database = env.str("DB")
+        database = env.str("DB_NAME")
         host = env.str("DB_HOST")
         password = env.str("DB_PASSWORD")
         user = env.str("DB_USER")
@@ -90,6 +90,9 @@ class TgBot:
     proxy_url: str
     use_redis: bool
     console_log_level: str
+    webhook_host: str | None = None
+    webapp_host: str | None = None
+    webapp_port: int | None = None
 
     @staticmethod
     def from_env(env: Env):
@@ -98,19 +101,25 @@ class TgBot:
         """
         token = env.str("BOT_TOKEN")
         admin_ids = list(map(int, env.list("ADMINS")))
-        proxy_url = env.str("PROXY_URL", None)
         console_log_level = env.str("CONSOLE_LOGGER_LVL")
         # admin_ids = list(map(
         #     lambda item: int(item) if isinstance(item, int) else str(item),
         #     env.list("ADMINS")
         # ))
         use_redis = env.bool("USE_REDIS")
+        proxy_url = env.str("PROXY_URL", default=None)
+        webhook_host=env.str("WEBHOOK_HOST", default=None)
+        webapp_host=env.str("WEBAPP_HOST", default=None)
+        webapp_port=env.int("WEBAPP_PORT", default=None)
         return TgBot(
             token=token,
             admin_ids=admin_ids,
-            proxy_url=proxy_url,
             use_redis=use_redis,
             console_log_level=console_log_level,
+            proxy_url=proxy_url,
+            webhook_host=webhook_host,
+            webapp_host=webapp_host,
+            webapp_port=webapp_port,
         )
 
 
