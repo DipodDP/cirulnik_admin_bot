@@ -8,17 +8,66 @@ print('URL is: ', url)
 start_requester_process(url)
 """
 
-import subprocess
-from multiprocessing import Process
-from subprocess import Popen
+# On PythonAnywhere only the WSGI web app accepts inbound connections and
+# uwsgi workers can't run threads, so the bot can't be polled from a worker
+# or reached as a subprocess. Instead Telegram POSTs updates to the Flask
+# webhook, which hands them over a queue to a long-lived bot process running
+# the Dispatcher on one event loop (albums need concurrent update handling).
+# The queue and secret are created at WSGI import, in the uwsgi master, so
+# every forked worker and the bot process share them.
+
 import asyncio
+import hmac
+import json
+import logging
+import secrets
+from multiprocessing import Process, SimpleQueue
 
 import requests
-from flask import Flask, redirect, url_for
+from flask import Flask, abort, request
 
+from bot import build_bot, setup_logging
+from tgbot.config import load_config
+from tgbot.misc.notify_admins import on_startup
+from tgbot.misc.setting_comands import set_all_default_commands
+
+WEBHOOK_PATH = '/webhook'
+WEBHOOK_SECRET = secrets.token_urlsafe(32)
+SECRET_HEADER = 'X-Telegram-Bot-Api-Secret-Token'
 
 app = Flask(__name__)
-process: Popen | None = None
+# ponytail: if the bot process dies, updates pile up until the web app reloads
+updates = SimpleQueue()
+
+
+async def _feed(dp, bot, raw):
+    try:
+        await dp.feed_raw_update(bot, json.loads(raw))
+    except Exception:
+        logging.exception('Failed to process update')
+
+
+async def _run_bot(url):
+    config = load_config('.env')
+    setup_logging(config.tg_bot.console_log_level)
+    bot, dp = build_bot(config)
+
+    await set_all_default_commands(bot)
+    await dp.emit_startup(bot=bot, dispatcher=dp, bots=[bot], **dp.workflow_data)
+    await bot.set_webhook(url + WEBHOOK_PATH, secret_token=WEBHOOK_SECRET)
+    await on_startup(bot, config.tg_bot.admin_ids)
+
+    loop = asyncio.get_running_loop()
+    tasks = set()
+    while True:
+        raw = await loop.run_in_executor(None, updates.get)
+        task = asyncio.create_task(_feed(dp, bot, raw))
+        tasks.add(task)
+        task.add_done_callback(tasks.discard)
+
+
+def run_bot(url):
+    asyncio.run(_run_bot(url))
 
 
 # Function to make a periodic request
@@ -34,61 +83,30 @@ async def request_url_periodically(url, interval):
 
 # Use multiprocessing to run the async task
 def run_periodic_request(url):
-    # This is the correct way to start an async function with asyncio in a process.
-    print('Starting the background URL request thread')
+    print('Starting the background URL request process')
     interval = 60 * 15  # Time interval in seconds (e.g., every 15 minutes)
-    asyncio.run(
-        request_url_periodically(url + '/start', interval)
-    )  # run the coroutine
+    asyncio.run(request_url_periodically(url, interval))
 
 
 def start_requester_process(url):
-    # Start the background requester process
-    requester_process = Process(target=run_periodic_request, args=(url,))
-    requester_process.start()  # Start the process
+    # Start the bot process and the keep-alive requester process
+    Process(target=run_bot, args=(url,)).start()
+    Process(target=run_periodic_request, args=(url,)).start()
 
 
 @app.route('/')
 def home():
-    global process
-    if process:
-        status = process.poll()
-        if status is None:
-            result = 'alive! :)'
-        else:
-            result = f'stopped with code {status}.\
-            Press <a href="/start">Start</a>'
-    else:
-        result = 'down! :(. Press <a href="/start">Start</a>'
-    return f'<h1>Bot is {result}</h>'
+    return '<h1>Bot is alive! :)</h1>'
 
 
-@app.route('/start')
-def start():
-    global process
-    status = 'Down'
-    if process:
-        status = process.poll()
-    if status is not None:
-        # in venv Pythonanywhere you may need to set
-        # full path to the Python interpreter
-        result_python_path = subprocess.run(
-            ['poetry', 'run', 'which', 'python'],
-            capture_output=True,
-            text=True,
-        )
-        if result_python_path.returncode == 0:
-            python_path = result_python_path.stdout.strip()
-        else:
-            python_path = 'python'
-
-        # Run main process
-        process = subprocess.Popen(f'{python_path} bot.py', shell=True)
-        print('Starting...')
-
-    return redirect(url_for('home'))
+@app.route(WEBHOOK_PATH, methods=['POST'])
+def webhook():
+    token = request.headers.get(SECRET_HEADER, '')
+    if not hmac.compare_digest(token, WEBHOOK_SECRET):
+        abort(403)
+    updates.put(request.get_data())
+    return '', 200
 
 
 if __name__ == '__main__':
-    start_requester_process('http://127.0.0.1:5000')
     app.run()

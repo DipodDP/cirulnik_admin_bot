@@ -92,14 +92,9 @@ def get_storage(config):
         return MemoryStorage()
 
 
-async def main():
-    config = load_config('.env')
+def build_bot(config: Config) -> tuple[Bot, Dispatcher]:
+    """Create a fully wired Bot and Dispatcher, for polling or webhook mode."""
     log_level = config.tg_bot.console_log_level
-
-    setup_logging(log_level)
-    logger = logging.getLogger(__name__)
-    logger.debug(config)
-
     storage = get_storage(config)
 
     # Proxy URL with credentials:
@@ -123,6 +118,15 @@ async def main():
         session_pool = create_session_pool(engine)
 
     register_global_middlewares(dp, config, session_pool)
+    return bot, dp
+
+
+async def main():
+    config = load_config('.env')
+    setup_logging(config.tg_bot.console_log_level)
+    logging.getLogger(__name__).debug(config)
+
+    bot, dp = build_bot(config)
     await set_all_default_commands(bot)
 
     try:
