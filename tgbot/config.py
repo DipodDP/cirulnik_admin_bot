@@ -61,7 +61,7 @@ class DbConfig:
         """
         Creates the DbConfig object from environment variables.
         """
-        database = env.str("DB")
+        database = env.str("DB_NAME")
         host = env.str("DB_HOST")
         password = env.str("DB_PASSWORD")
         user = env.str("DB_USER")
